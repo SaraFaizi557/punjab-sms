@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
+import { handlePaperAi } from "./server/paperAi.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -18,6 +19,44 @@ function viteBase(mode) {
 }
 
 /** Rewrite root-absolute links in `index.html` when hosting under a subpath. */
+function paperAiDevPlugin(mode) {
+  return {
+    name: "psms-paper-ai",
+    configureServer(server) {
+      const env = loadEnv(mode, process.cwd(), "");
+      console.log("[psms-paper-ai] route ready");
+      server.middlewares.use((req, res, next) => {
+        const pathOnly = String(req.url || "").split("?")[0];
+        if (pathOnly !== "/api/generate-paper") return next();
+        if (req.method !== "POST") {
+          res.statusCode = 405;
+          res.setHeader("Content-Type", "application/json");
+          res.end(JSON.stringify({ error: "Method not allowed" }));
+          return;
+        }
+        const chunks = [];
+        req.on("data", (chunk) => chunks.push(chunk));
+        req.on("end", async () => {
+          try {
+            const body = JSON.parse(Buffer.concat(chunks).toString("utf8") || "{}");
+            const result = await handlePaperAi(body, {
+              apiKey: process.env.GEMINI_API_KEY || env.GEMINI_API_KEY,
+              model: process.env.GEMINI_MODEL || env.GEMINI_MODEL,
+            });
+            res.statusCode = result.status;
+            res.setHeader("Content-Type", "application/json");
+            res.end(JSON.stringify(result.body));
+          } catch (error) {
+            res.statusCode = 500;
+            res.setHeader("Content-Type", "application/json");
+            res.end(JSON.stringify({ error: error?.message || "Paper generation failed." }));
+          }
+        });
+      });
+    },
+  };
+}
+
 function patchHtmlPublicLinks(base) {
   return {
     name: "psms-html-public-links",
@@ -164,6 +203,7 @@ export default defineConfig(({ mode }) => {
         },
       }),
       psmsCloudConfigPlugin(mode, base),
+      paperAiDevPlugin(mode),
       patchHtmlPublicLinks(base),
       patchManifestScope(base),
       {

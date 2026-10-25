@@ -23,6 +23,7 @@ import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import * as H from "@/shared/helpers";
+import { AiBookPaperPanel } from "./AiBookPaperPanel.jsx";
 
 const {
   formatGradeLabel, formatClassDisplay, resolveClass, getClassLabel, normKey,
@@ -55,6 +56,7 @@ const PAPER_TYPES = [
   { id: "englishLang", l: "English Lang", label: "English Language Paper" },
   { id: "urduLang", l: "Urdu Lang", label: "Urdu Language Paper" },
   { id: "autoPaper", l: "Auto Paper", label: "Auto Paper Generator" },
+  { id: "aiBook", l: "AI Book Paper", label: "AI Book Paper" },
 ];
 
 export function PaperGeneratorPage({settings,questionBank,setQuestionBank,setBarSubtitle}){
@@ -344,13 +346,34 @@ export function PaperGeneratorPage({settings,questionBank,setQuestionBank,setBar
       onTabChange={setPaperType}
       bareContent
       actions={
-        paperType !== "autoPaper" ? (
+        paperType !== "autoPaper" && paperType !== "aiBook" ? (
           <Button variant="outline" onClick={() => setPreview(true)}>Preview Paper</Button>
         ) : null
       }
     >
     {printPaperMode&&<div className={`paper-print-only${(paperType==="urdu"||paperType==="urduLang")?"":" font-heading"}`} style={{position:"absolute",left:"-9999px",top:0,width:"100%",padding:20,fontFamily:(paperType==="urdu"||paperType==="urduLang")?"'Jameel Noori Nastaliq Regular','Jameel Noori Nastaliq',serif":undefined,direction:(paperType==="urdu"||paperType==="urduLang")?"rtl":"ltr",textAlign:(paperType==="urdu"||paperType==="urduLang")?"right":"left",fontSize:(paperType==="urdu"||paperType==="urduLang")?14:undefined,boxSizing:"border-box"}}>{paperContent}</div>}
-    {paperType==="autoPaper" ? (
+    {paperType==="aiBook" ? (
+      <AiBookPaperPanel
+        settings={settings}
+        onApplyPaper={(next) => {
+          setSections(next);
+          setPaperType("regular");
+          setPreview(true);
+        }}
+        onSaveToBank={(classId, subjectName, questions) => {
+          setSelCls(classId);
+          if (subjectName) setSubj(subjectName);
+          setQuestionBank((prev) => {
+            const next = { ...(prev || {}) };
+            const bucket = next[classId] && typeof next[classId] === "object" ? { ...next[classId] } : {};
+            const current = Array.isArray(bucket[subjectName]) ? bucket[subjectName] : [];
+            bucket[subjectName] = [...current, ...questions];
+            next[classId] = bucket;
+            return next;
+          });
+        }}
+      />
+    ) : paperType==="autoPaper" ? (
       <Card size="sm" className="shadow-none">
         <CardHeader className="flex flex-col gap-3 border-b sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -593,8 +616,20 @@ export function PaperGeneratorPage({settings,questionBank,setQuestionBank,setBar
     )}
     <Dialog open={preview} onOpenChange={setPreview}>
       <DialogContent className="max-w-[780px] max-h-[90vh] overflow-auto">
-        <DialogHeader>
+        <DialogHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
           <DialogTitle>Paper Preview</DialogTitle>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            className="no-print shrink-0"
+            onClick={() => {
+              setPrintPaperMode(true);
+              setTimeout(() => window.print(), 50);
+            }}
+          >
+            Print Paper
+          </Button>
         </DialogHeader>
         <div
           className={(paperType==="urdu"||paperType==="urduLang")?undefined:"font-heading"}
