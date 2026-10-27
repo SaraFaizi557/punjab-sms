@@ -1429,7 +1429,7 @@ export function ExaminationPage({settings:settingsProp,setSettings,students:stud
                       const { s, obt, tot, pct } = row;
                       const pctNum = parseFloat(pct);
                       const passFail = Number.isNaN(pctNum) ? "—" : pctNum >= passThreshold ? "Pass" : "Fail";
-                      const passFailColor = Number.isNaN(pctNum) ? "#9ca3af" : pctNum >= passThreshold ? "#15803d" : "#dc2626";
+                      const passFailColor = Number.isNaN(pctNum) ? "#9ca3af" : pctNum >= passThreshold ? "#2563eb" : "#dc2626";
                       return (
                         <tr key={s.id} style={{ background: i % 2 === 0 ? "#f8fafc" : "#fff" }}>
                           <td style={{ padding: 4, verticalAlign: "middle", textAlign: "center" }}>
@@ -1451,7 +1451,7 @@ export function ExaminationPage({settings:settingsProp,setSettings,students:stud
                           </td>
                           <td style={{ padding: "5px 8px", textAlign: "center", fontVariantNumeric: "tabular-nums" }}>{pct}%</td>
                           <td style={{ padding: "5px 8px", textAlign: "center", fontWeight: 700, color: passFailColor }}>{passFail}</td>
-                          <td style={{ padding: "5px 8px", textAlign: "center", fontWeight: 700, color: parseFloat(pct) >= passThreshold ? "#15803d" : "#dc2626" }}>{grade(pct)}</td>
+                          <td style={{ padding: "5px 8px", textAlign: "center", fontWeight: 700, color: parseFloat(pct) >= passThreshold ? "#2563eb" : "#dc2626" }}>{grade(pct)}</td>
                           <td style={{ padding: "5px 8px", textAlign: "center", fontWeight: 700 }}>
                             <div>{pos}</div>
                             {passFail === "Pass" && (

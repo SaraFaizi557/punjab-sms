@@ -48,7 +48,7 @@ function KpiCard({ icon: IconCmp, label, value, hint, onClick }) {
       className="h-full min-w-0 bg-card shadow-none transition-colors hover:bg-muted/40"
     >
       <CardHeader className="pb-0">
-        <div className="flex size-9 items-center justify-center rounded-lg border border-border bg-muted/50 text-foreground">
+        <div className="flex size-9 items-center justify-center rounded-lg border border-primary/20 bg-primary/10 text-primary">
           {IconCmp ? <IconCmp className="size-4" aria-hidden /> : null}
         </div>
         {onClick ? (
@@ -435,7 +435,7 @@ export function DashboardPage({
                   onClick={action.run}
                   className="h-auto min-h-0 justify-start gap-3 whitespace-normal px-3 py-3 text-left"
                 >
-                  <span className="flex size-9 shrink-0 items-center justify-center rounded-md border border-border bg-muted/40">
+                  <span className="flex size-9 shrink-0 items-center justify-center rounded-md border border-primary/20 bg-primary/10 text-primary">
                     <Icon className="size-4" aria-hidden />
                   </span>
                   <span className="min-w-0 flex-1">
@@ -667,7 +667,7 @@ export function DashboardPage({
                         {row.total > 0 ? (
                           <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
                             <div
-                              className="h-full rounded-full bg-foreground/70"
+                              className="h-full rounded-full bg-primary"
                               style={{ width: `${passRatePct}%` }}
                             />
                           </div>

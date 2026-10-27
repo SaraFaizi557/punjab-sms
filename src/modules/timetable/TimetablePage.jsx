@@ -245,9 +245,9 @@ export function AllClassesView({settings,staffProfiles,timetable,setTimetable,da
     <table className="timetable-pdf-export tt-grid" style={{borderCollapse:"collapse",fontSize:11,minWidth:900,width:"100%",tableLayout:"fixed"}}>
       <thead>
         <tr>
-          <th style={{background:"#15803d",color:"#fff",padding:"8px 8px",width:100,minWidth:100,position:"sticky",left:0,zIndex:2,fontSize:12,textAlign:"center",verticalAlign:"middle"}}>Class</th>
+          <th style={{background:"#0B3A6E",color:"#fff",padding:"8px 8px",width:100,minWidth:100,position:"sticky",left:0,zIndex:2,fontSize:12,textAlign:"center",verticalAlign:"middle"}}>Class</th>
           {pRows.map((p,i)=>[
-            <th key={`ph${i}`} style={{background:"#15803d",color:"#fff",padding:"6px 4px",minWidth:92,textAlign:"center",verticalAlign:"middle",whiteSpace:"pre-line",fontWeight:700,lineHeight:1.25}}>
+            <th key={`ph${i}`} style={{background:"#0B3A6E",color:"#fff",padding:"6px 4px",minWidth:92,textAlign:"center",verticalAlign:"middle",whiteSpace:"pre-line",fontWeight:700,lineHeight:1.25}}>
               {timetablePdfPeriodCell(getPeriodLabel(i, settings), `${fmtMin(p.start)}–${fmtMin(p.end)}`)}
             </th>,
             i===brAfterIdx&&brRow&&<th key={`bh${i}`} className="timetable-pdf-break-th" style={{background:C.breakC,color:"#78350f",padding:"6px 4px",width:56,minWidth:56,textAlign:"center",verticalAlign:"middle",fontWeight:700,fontSize:10,whiteSpace:"pre-line",lineHeight:1.25}}>{timetablePdfPeriodCell("Break", `${fmtMin(brRow.start)}–${fmtMin(brRow.end)}`)}</th>
@@ -311,9 +311,9 @@ export function AllClassesAllDaysView({settings,staffProfiles,timetable,setTimet
     <table className="timetable-pdf-export" style={{borderCollapse:"collapse",fontSize:11,minWidth:900}}>
       <thead>
         <tr>
-          <th style={{background:"#15803d",color:"#fff",padding:"6px 8px",minWidth:88,position:"sticky",left:0,zIndex:2,fontSize:12}}>Class</th>
+          <th style={{background:"#0B3A6E",color:"#fff",padding:"6px 8px",minWidth:88,position:"sticky",left:0,zIndex:2,fontSize:12}}>Class</th>
           {pRows.map((p,i)=>[
-            <th key={`ph${i}`} style={{background:"#15803d",color:"#fff",padding:"4px 5px",minWidth:88,textAlign:"center",whiteSpace:"pre-line",fontWeight:700}}>
+            <th key={`ph${i}`} style={{background:"#0B3A6E",color:"#fff",padding:"4px 5px",minWidth:88,textAlign:"center",whiteSpace:"pre-line",fontWeight:700}}>
               {timetablePdfPeriodCell(getPeriodLabel(i, settings), `${fmtMin(p.start)}–${fmtMin(p.end)}`)}
             </th>,
             i===brAfterIdx&&brRow&&<th key={`bh${i}`} className="timetable-pdf-break-th" style={{background:C.breakC,color:"#78350f",padding:"4px 5px",minWidth:58,textAlign:"center",fontWeight:700,fontSize:10,whiteSpace:"pre-line"}}>{timetablePdfPeriodCell("Break", `${fmtMin(brRow.start)}–${fmtMin(brRow.end)}`)}</th>
@@ -377,14 +377,14 @@ export function TeachersView({settings,timetable,day,staff:staffOverride,printSu
     <table className="timetable-pdf-export tt-grid" style={{borderCollapse:"collapse",fontSize:11,minWidth:800,width:"100%",tableLayout:"fixed"}}>
       <thead>
         <tr>
-          <th style={{background:"#15803d",color:"#fff",padding:"8px 6px",width:120,minWidth:120,position:"sticky",left:0,zIndex:2,fontSize:11,textAlign:"center",verticalAlign:"middle"}}>Teacher</th>
+          <th style={{background:"#0B3A6E",color:"#fff",padding:"8px 6px",width:120,minWidth:120,position:"sticky",left:0,zIndex:2,fontSize:11,textAlign:"center",verticalAlign:"middle"}}>Teacher</th>
           {pRows.map((p,i)=>[
-            <th key={`th${i}`} style={{background:"#15803d",color:"#fff",padding:"6px 4px",minWidth:88,textAlign:"center",verticalAlign:"middle",fontSize:11,whiteSpace:"pre-line",fontWeight:700,lineHeight:1.25}}>
+            <th key={`th${i}`} style={{background:"#0B3A6E",color:"#fff",padding:"6px 4px",minWidth:88,textAlign:"center",verticalAlign:"middle",fontSize:11,whiteSpace:"pre-line",fontWeight:700,lineHeight:1.25}}>
               {timetablePdfPeriodCell(getPeriodLabel(i, settings), `${fmtMin(p.start)}–${fmtMin(p.end)}`)}
             </th>,
             i===brAfterIdx&&brRow&&<th key={`tbh${i}`} className="timetable-pdf-break-th" style={{background:C.breakC,color:"#78350f",padding:"6px 4px",width:56,minWidth:56,textAlign:"center",verticalAlign:"middle",fontWeight:700,fontSize:10,whiteSpace:"pre-line",lineHeight:1.25}}>{timetablePdfPeriodCell("Break", `${fmtMin(brRow.start)}–${fmtMin(brRow.end)}`)}</th>
           ])}
-          <th style={{background:"#15803d",color:"#fff",padding:"8px 6px",width:72,minWidth:72,textAlign:"center",verticalAlign:"middle",fontSize:11}}>Periods</th>
+          <th style={{background:"#0B3A6E",color:"#fff",padding:"8px 6px",width:72,minWidth:72,textAlign:"center",verticalAlign:"middle",fontSize:11}}>Periods</th>
         </tr>
       </thead>
       <tbody>
@@ -578,9 +578,9 @@ export function ByClassView({settings,staffProfiles,timetable,setTimetable,selCl
       <table className="timetable-pdf-export tt-grid" style={{borderCollapse:"collapse",fontSize:11,width:"100%",tableLayout:"fixed",minWidth:720}}>
           <thead>
             <tr>
-              <th style={{background:"#15803d",color:"#fff",padding:"8px 8px",width:100,minWidth:100,whiteSpace:"pre-line",textAlign:"center",verticalAlign:"middle",fontWeight:700,lineHeight:1.25}}>{timetablePdfPeriodCell("Day", "Time")}</th>
+              <th style={{background:"#0B3A6E",color:"#fff",padding:"8px 8px",width:100,minWidth:100,whiteSpace:"pre-line",textAlign:"center",verticalAlign:"middle",fontWeight:700,lineHeight:1.25}}>{timetablePdfPeriodCell("Day", "Time")}</th>
               {pRows.map((p, i) => [
-                <th key={`bch${i}`} style={{background:"#15803d",color:"#fff",padding:"6px 4px",minWidth:88,textAlign:"center",verticalAlign:"middle",whiteSpace:"pre-line",fontWeight:700,lineHeight:1.25}}>
+                <th key={`bch${i}`} style={{background:"#0B3A6E",color:"#fff",padding:"6px 4px",minWidth:88,textAlign:"center",verticalAlign:"middle",whiteSpace:"pre-line",fontWeight:700,lineHeight:1.25}}>
                   {timetablePdfPeriodCell(getPeriodLabel(i, settings), `${fmtMin(p.start)}–${fmtMin(p.end)}`)}
                 </th>,
                 i === brAfterIdx && (
@@ -674,7 +674,7 @@ export function ByTeacherView({settings,timetable,selT,suppressPrintHeader}){
       <div style={{overflowX:"auto"}}>
         <table className="timetable-pdf-export" style={{borderCollapse:"collapse",fontSize:11,width:"100%"}}>
           <thead>
-            <tr style={{background:"#15803d",color:"#fff"}}>
+            <tr style={{background:"#0B3A6E",color:"#fff"}}>
               <th style={{padding:"5px 8px",textAlign:"left",minWidth:70}}>Periods</th>
               <th colSpan={2} style={{padding:"5px 8px",textAlign:"center",borderLeft:"1px solid #86efac"}}>MONDAY TO THURSDAY</th>
               <th colSpan={2} style={{padding:"5px 8px",textAlign:"center",borderLeft:"1px solid #86efac"}}>FRIDAY</th>

@@ -54,4 +54,4 @@ export const UI = {
 };
 
 /** Hex navy for HTML/PDF strings where CSS variables are not available */
-export const UI_NAVY_HEX = "#1B5E20";
+export const UI_NAVY_HEX = "#0B3A6E";

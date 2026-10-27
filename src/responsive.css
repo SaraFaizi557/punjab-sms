@@ -615,3 +615,14 @@ body.result-card-capturing .app-layout {
     height: 100dvh !important;
   }
 }
+
+/* Admin panel: prevent horizontal overflow on phones */
+.admin-panel {
+  min-width: 0;
+  max-width: 100%;
+}
+.admin-panel .admin-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}

@@ -233,7 +233,7 @@ export function AttendancePage({
 
   // Status color for register table cells (kept as inline for print compat)
   const stColor = (st) =>
-    st === "P" ? "#15803d" : st === "A" ? "#dc2626" : st === "L" ? "#d97706" : "#9ca3af";
+    st === "P" ? "#2563eb" : st === "A" ? "#dc2626" : st === "L" ? "#d97706" : "#9ca3af";
 
   // ── Render ────────────────────────────────────────────────────────────────────
   return (

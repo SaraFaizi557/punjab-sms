@@ -236,7 +236,7 @@ export function FeePage({ settings, students, activeSchoolId, setBarSubtitle }) 
               size="sm"
               disabled={classObj.pendingCount === 0}
               onClick={() => markAllClassPaid(classObj.classId)}
-              className="bg-green-700 hover:bg-green-800"
+              className="bg-primary hover:bg-primary/90"
             >
               Mark Class Paid ({classObj.pendingCount})
             </Button>
@@ -250,9 +250,9 @@ export function FeePage({ settings, students, activeSchoolId, setBarSubtitle }) 
         <div className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(140px,1fr))]">
           {[
             { l: "Students", v: classObj.totalStudents, c: "text-foreground" },
-            { l: "Paid", v: classObj.paidCount, c: "text-green-700" },
+            { l: "Paid", v: classObj.paidCount, c: "text-primary" },
             { l: "Pending", v: classObj.pendingCount, c: "text-red-600" },
-            { l: "Collected", v: feeCore.formatCurrency(classObj.collectedAmount), c: "text-green-700" },
+            { l: "Collected", v: feeCore.formatCurrency(classObj.collectedAmount), c: "text-primary" },
             { l: "Pending Amt", v: feeCore.formatCurrency(classObj.pendingAmount), c: "text-red-600" },
           ].map((s) => (
             <Card key={s.l} className="border-border/70 shadow-sm">
@@ -299,7 +299,7 @@ export function FeePage({ settings, students, activeSchoolId, setBarSubtitle }) 
                             {feeRecord ? feeService.formatCurrency(feeCore.FEE_AMOUNT) : "—"}
                           </TableCell>
                           <TableCell className="text-center">
-                            <Badge variant={feeStatus.paid ? "default" : "destructive"} className={feeStatus.paid ? "bg-green-700" : ""}>
+                            <Badge variant={feeStatus.paid ? "default" : "destructive"}>
                               {feeStatus.paid ? "Paid" : "Pending"}
                             </Badge>
                           </TableCell>
@@ -313,7 +313,7 @@ export function FeePage({ settings, students, activeSchoolId, setBarSubtitle }) 
                               variant="outline"
                               disabled={saving === student.id}
                               onClick={() => toggleFeePayment(student.id, classObj.classId)}
-                              className={feeStatus.paid ? "border-amber-300 text-amber-700" : "border-green-300 text-green-700"}
+                              className={feeStatus.paid ? "border-amber-300 text-amber-700" : "border-primary/40 text-primary"}
                             >
                               {saving === student.id ? "Saving…" : (feeStatus.paid ? "Mark Unpaid" : "Mark Paid")}
                             </Button>
@@ -360,7 +360,7 @@ export function FeePage({ settings, students, activeSchoolId, setBarSubtitle }) 
             <div className="mt-1 text-xs opacity-80">{monthlySummary.length} classes</div>
           </CardContent>
         </Card>
-        <Card className="border-0 text-white shadow-md" style={{ background: "linear-gradient(135deg, #15803d 0%, #22c55e 100%)" }}>
+        <Card className="border-0 text-white shadow-md" style={{ background: "linear-gradient(135deg, #0B3A6E 0%, #2563eb 100%)" }}>
           <CardContent className="p-5">
             <div className="mb-1 text-sm opacity-90">Total Collected</div>
             <div className="text-3xl font-bold tabular-nums">{feeCore.formatCurrency(totalCollection)}</div>
@@ -423,14 +423,14 @@ export function FeePage({ settings, students, activeSchoolId, setBarSubtitle }) 
                     >
                       <TableCell className="whitespace-nowrap font-semibold text-foreground">{cls.className}</TableCell>
                       <TableCell className="whitespace-nowrap text-center tabular-nums text-muted-foreground">{cls.totalStudents}</TableCell>
-                      <TableCell className="whitespace-nowrap text-center tabular-nums font-semibold text-green-700">{cls.paidCount}</TableCell>
-                      <TableCell className={`whitespace-nowrap text-center tabular-nums font-semibold ${cls.pendingCount > 0 ? "text-red-600" : "text-green-700"}`}>
+                      <TableCell className="whitespace-nowrap text-center tabular-nums font-semibold text-primary">{cls.paidCount}</TableCell>
+                      <TableCell className={`whitespace-nowrap text-center tabular-nums font-semibold ${cls.pendingCount > 0 ? "text-red-600" : "text-primary"}`}>
                         {cls.pendingCount}
                       </TableCell>
                       <TableCell className="whitespace-nowrap text-right tabular-nums text-muted-foreground">
                         {feeCore.formatCurrency(cls.expectedAmount)}
                       </TableCell>
-                      <TableCell className="whitespace-nowrap text-right tabular-nums font-semibold text-green-700">
+                      <TableCell className="whitespace-nowrap text-right tabular-nums font-semibold text-primary">
                         {feeCore.formatCurrency(cls.collectedAmount)}
                       </TableCell>
                       <TableCell className="whitespace-nowrap text-right tabular-nums font-semibold text-red-600">

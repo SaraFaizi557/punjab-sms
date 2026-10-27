@@ -90,12 +90,12 @@ function SyncDot({ isSupabaseConfigured, isOnline, cloudReady, cloudSyncing }) {
           ? "Syncing…"
           : "Connecting…";
   const color = !isSupabaseConfigured
-    ? "bg-neutral-400"
+    ? "bg-muted-foreground/50"
     : !isOnline
-      ? "bg-neutral-800"
+      ? "bg-amber-500"
       : cloudReady
-        ? "bg-neutral-900"
-        : "bg-neutral-500";
+        ? "bg-primary"
+        : "bg-primary/50";
   return (
     <div className="flex items-center gap-2 px-2 py-1.5 text-[11px] text-muted-foreground">
       <span className={`size-1.5 shrink-0 rounded-full ${color}`} />
@@ -115,6 +115,7 @@ function ShellNav({ nav, page, onNavigate }) {
             <SidebarMenuButton
               isActive={isActive}
               tooltip={item.l}
+              className={isActive ? "bg-primary/10 text-primary data-active:bg-primary/10 data-active:text-primary" : undefined}
               onClick={() => {
                 onNavigate?.(item.id);
                 if (isMobile) setOpenMobile(false);

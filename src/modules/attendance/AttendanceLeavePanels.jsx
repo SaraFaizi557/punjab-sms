@@ -71,7 +71,7 @@ export function AttendanceOverviewPanel({
       value: `${summary.students.present}/${summary.students.total}`,
       hint: `${summary.students.attendanceRate}% · ${summary.students.unmarked} unmarked`,
       tab: "students",
-      accent: "#15803d",
+      accent: "#2563eb",
     },
     {
       label: "Students absent / late",
@@ -87,7 +87,7 @@ export function AttendanceOverviewPanel({
             value: `${summary.staff.present}/${summary.staff.total}`,
             hint: `${summary.staff.unmarked} unmarked`,
             tab: "staff",
-            accent: "#0f766e",
+            accent: "#0B3A6E",
           },
         ]
       : []),
@@ -424,7 +424,7 @@ export function AttendanceReportsPanel({ settings, students, staffProfiles, acti
                     <TableCell>{r.present}</TableCell>
                     <TableCell>{r.absent}</TableCell>
                     <TableCell>{r.late}</TableCell>
-                    <TableCell className={cn("font-bold", r.rate < 75 ? "text-destructive" : "text-green-700")}>{r.rate}%</TableCell>
+                    <TableCell className={cn("font-bold", r.rate < 75 ? "text-destructive" : "text-primary")}>{r.rate}%</TableCell>
                   </TableRow>
                 ))
               )}

@@ -1033,7 +1033,7 @@ export async function appendExportTablePdfSection(doc, settings, session, tableN
   const timetablePdfTable = isTimetableGridExport
     ? {
         headStyles: {
-          fillColor: [21, 128, 61],
+          fillColor: [11, 58, 110],
           textColor: [255, 255, 255],
           fontStyle: "bold",
           halign: "center",

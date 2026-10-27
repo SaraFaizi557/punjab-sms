@@ -135,7 +135,7 @@ export function StaffAttendancePanel({ staffProfiles, activeSchoolId }) {
         </div>
 
         <div className="flex flex-wrap gap-2 mb-3.5">
-          <Badge variant="secondary" className="bg-green-50 text-green-800 border border-green-200">Present <strong className="ml-1">{summary.present}</strong></Badge>
+          <Badge variant="secondary" className="bg-primary/10 text-primary border border-primary/20">Present <strong className="ml-1">{summary.present}</strong></Badge>
           <Badge variant="secondary" className="bg-red-50 text-red-800 border border-red-200">Absent <strong className="ml-1">{summary.absent}</strong></Badge>
           <Badge variant="secondary" className="bg-yellow-50 text-yellow-800 border border-yellow-200">Leave <strong className="ml-1">{summary.leave}</strong></Badge>
           <Badge variant="outline">Unmarked <strong className="ml-1">{summary.unmarked}</strong></Badge>

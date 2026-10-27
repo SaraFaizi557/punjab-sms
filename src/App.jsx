@@ -1016,68 +1016,93 @@ function AdminPage({ schools, setSchools, setSchoolStatus, onSignOut, onResetAll
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col" style={{ fontFamily: UI.fontApp }}>
-      {/* Dark header */}
-      <header className="bg-slate-800 text-white px-5 py-3 flex items-center gap-3.5 shrink-0">
-        <img src={APP_BRAND_LOGO} alt="" className="w-[72px] h-[72px] object-contain rounded-lg bg-white/10 p-1 shrink-0" />
-        <div className="flex-1">
-          <div className="font-bold text-base">Admin Panel</div>
-          <div className="text-xs opacity-65 mt-px">Punjab-SMS — Full Control</div>
+    <div className="admin-panel min-h-screen min-h-[100dvh] bg-slate-100 flex flex-col overflow-x-clip" style={{ fontFamily: UI.fontApp }}>
+      {/* Brand blue header — stacks on mobile */}
+      <header className="admin-topbar bg-primary text-primary-foreground px-3 py-3 sm:px-5 shrink-0">
+        <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
+          <img
+            src={APP_BRAND_LOGO}
+            alt=""
+            className="w-11 h-11 sm:w-[72px] sm:h-[72px] object-contain rounded-lg bg-white/10 p-1 shrink-0"
+          />
+          <div className="flex-1 min-w-0">
+            <div className="font-bold text-sm sm:text-base truncate">Admin Panel</div>
+            <div className="text-[11px] sm:text-xs opacity-65 mt-px truncate">Punjab-SMS — Full Control</div>
+          </div>
+          <div className="hidden md:block text-xs opacity-70 text-right leading-snug tabular-nums shrink-0">
+            <div>{headerNow.toLocaleDateString("en-PK", { weekday: "short", day: "numeric", month: "short" })}</div>
+            <div className="font-bold">{headerNow.toLocaleTimeString("en-PK", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</div>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onSignOut}
+            className="border-white/20 bg-white/8 text-white hover:bg-white/15 hover:text-white whitespace-nowrap shrink-0"
+          >
+            Sign Out
+          </Button>
         </div>
-        <Badge
-          title={cloudMsg || (cloudOk ? "Cloud connected — school logins sync to every device" : "Cloud not connected — logins stay on this device only")}
-          className={`text-[11px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap border ${cloudOk ? "bg-green-500/20 text-green-300 border-green-400/40" : "bg-red-400/20 text-red-300 border-red-300/40"}`}
-        >
-          {usersSyncing ? "☁ Syncing…" : cloudOk ? "☁ Cloud ON" : "☁ Cloud OFF"}
-        </Badge>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => pullUsersFromCloud()}
-          disabled={usersSyncing}
-          className="border-white/25 bg-blue-500/35 text-white hover:bg-blue-500/50 hover:text-white whitespace-nowrap"
-        >
-          {usersSyncing ? "Syncing…" : "Refresh from cloud"}
-        </Button>
-        <div className="text-xs opacity-70 text-right leading-snug mr-2 tabular-nums">
-          <div>{headerNow.toLocaleDateString("en-PK", { weekday: "short", day: "numeric", month: "short" })}</div>
-          <div className="font-bold">{headerNow.toLocaleTimeString("en-PK", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</div>
+        <div className="mt-2.5 flex flex-wrap items-center gap-2">
+          <Badge
+            title={cloudMsg || (cloudOk ? "Cloud connected — school logins sync to every device" : "Cloud not connected — logins stay on this device only")}
+            className={`text-[11px] font-bold px-2.5 py-1 rounded-full whitespace-nowrap border ${cloudOk ? "bg-white/20 text-white border-white/40" : "bg-red-400/20 text-red-100 border-red-200/40"}`}
+          >
+            {usersSyncing ? "☁ Syncing…" : cloudOk ? "☁ Cloud ON" : "☁ Cloud OFF"}
+          </Badge>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => pullUsersFromCloud()}
+            disabled={usersSyncing}
+            className="border-white/25 bg-blue-500/35 text-white hover:bg-blue-500/50 hover:text-white whitespace-nowrap"
+          >
+            {usersSyncing ? "Syncing…" : "Refresh from cloud"}
+          </Button>
+          <div className="md:hidden ml-auto text-[11px] opacity-70 text-right leading-snug tabular-nums">
+            <span>{headerNow.toLocaleDateString("en-PK", { weekday: "short", day: "numeric", month: "short" })}</span>
+            {" · "}
+            <span className="font-bold">{headerNow.toLocaleTimeString("en-PK", { hour: "2-digit", minute: "2-digit" })}</span>
+          </div>
         </div>
-        <Button variant="outline" size="sm" onClick={onSignOut} className="border-white/20 bg-white/8 text-white hover:bg-white/15 hover:text-white whitespace-nowrap">Sign Out</Button>
       </header>
       {cloudMsg && (
-        <div className={`px-5 py-2 text-xs font-semibold border-b ${cloudOk ? "bg-emerald-50 text-emerald-800 border-emerald-200" : "bg-orange-50 text-orange-800 border-orange-200"}`}>
+        <div className={`px-3 sm:px-5 py-2 text-xs font-semibold border-b break-words ${cloudOk ? "bg-emerald-50 text-emerald-800 border-emerald-200" : "bg-orange-50 text-orange-800 border-orange-200"}`}>
           {cloudMsg}
         </div>
       )}
-      {/* Tab bar */}
-      <div className="bg-white border-b border-slate-200 px-5">
+      {/* Tab bar — horizontal scroll on narrow screens */}
+      <div className="bg-white border-b border-slate-200 px-2 sm:px-5 overflow-x-auto overscroll-x-contain">
         <Tabs value={adminTab} onValueChange={setAdminTab}>
-          <TabsList className="bg-transparent border-0 rounded-none h-auto p-0 gap-0">
-            {[["users","👥 User Management"],["schools","🏫 School Accounts"],["danger","⚠️ Danger Zone"]].map(([t,label]) => (
+          <TabsList className="bg-transparent border-0 rounded-none h-auto p-0 gap-0 w-max min-w-full sm:w-auto">
+            {[
+              ["users", "👥 Users", "👥 User Management"],
+              ["schools", "🏫 Schools", "🏫 School Accounts"],
+              ["danger", "⚠️ Danger", "⚠️ Danger Zone"],
+            ].map(([t, shortLabel, label]) => (
               <TabsTrigger
                 key={t}
                 value={t}
-                className="rounded-none border-b-[3px] data-[state=active]:border-slate-800 data-[state=active]:text-slate-800 data-[state=active]:font-bold data-[state=inactive]:border-transparent data-[state=inactive]:text-slate-500 bg-transparent px-4 py-3 text-sm font-medium shadow-none -mb-px"
+                className="rounded-none border-b-[3px] data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:font-bold data-[state=inactive]:border-transparent data-[state=inactive]:text-slate-500 bg-transparent px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm font-medium shadow-none -mb-px whitespace-nowrap"
               >
-                {label}
+                <span className="sm:hidden">{shortLabel}</span>
+                <span className="hidden sm:inline">{label}</span>
               </TabsTrigger>
             ))}
           </TabsList>
         </Tabs>
       </div>
-      <div className="flex-1 p-5 overflow-auto">
-      <div className="max-w-[900px] mx-auto">
+      <div className="flex-1 p-3 sm:p-5 overflow-auto">
+      <div className="max-w-[900px] mx-auto w-full min-w-0">
 
         {/* ── TAB: USER MANAGEMENT ── */}
         {adminTab === "users" && (<>
-          <div className="flex justify-end mb-3">
+          <div className="flex justify-stretch sm:justify-end mb-3">
             <Button
               variant="outline"
               size="sm"
               onClick={() => pullUsersFromCloud()}
               disabled={usersSyncing}
-              className="border-blue-300 bg-blue-50 text-blue-700 hover:bg-blue-100"
+              className="w-full sm:w-auto border-blue-300 bg-blue-50 text-blue-700 hover:bg-blue-100"
             >
               {usersSyncing ? "Syncing logins…" : "☁ Refresh logins from cloud"}
             </Button>
@@ -1094,26 +1119,28 @@ function AdminPage({ schools, setSchools, setSchoolStatus, onSignOut, onResetAll
               ) : (
                 <div className="flex flex-col gap-2.5">
                   {usersList.filter(u => u.userType === "local").map(u => (
-                    <div key={u.id} className={`px-3.5 py-3 rounded-lg border ${u.blocked ? "bg-red-50 border-red-200" : "bg-slate-50 border-slate-200"}`}>
-                      <div className="flex items-center gap-2.5 flex-wrap">
-                        <div className="flex-1 min-w-[160px]">
-                          <div className="font-bold text-slate-800 text-sm">{u.name || "—"}</div>
-                          <div className="text-xs text-slate-500">{u.email}</div>
-                          <div className="text-[11px] text-slate-400 mt-0.5">Password: <strong className="font-mono">{u.password}</strong>{u.blocked && <span className="ml-2 text-red-600 font-bold">BLOCKED</span>}</div>
+                    <div key={u.id} className={`px-3 py-3 sm:px-3.5 rounded-lg border min-w-0 ${u.blocked ? "bg-red-50 border-red-200" : "bg-slate-50 border-slate-200"}`}>
+                      <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:flex-wrap">
+                        <div className="flex-1 min-w-0">
+                          <div className="font-bold text-slate-800 text-sm break-words">{u.name || "—"}</div>
+                          <div className="text-xs text-slate-500 break-all">{u.email}</div>
+                          <div className="text-[11px] text-slate-400 mt-0.5 break-all">Password: <strong className="font-mono">{u.password}</strong>{u.blocked && <span className="ml-2 text-red-600 font-bold">BLOCKED</span>}</div>
                         </div>
-                        <div className="flex gap-1.5 flex-wrap">
-                          <Button variant="outline" size="sm" onClick={() => { setEditUserId(editUserId === u.id ? null : u.id); setEditNewPw(""); setEditPwError(""); }}>Change PW</Button>
-                          <Button variant="outline" size="sm" onClick={() => handleToggleBlock(u.id)} className={u.blocked ? "border-green-600 text-green-700 hover:bg-green-50" : "border-amber-500 text-amber-700 hover:bg-amber-50"}>
+                        <div className="grid grid-cols-3 gap-1.5 sm:flex sm:flex-wrap sm:w-auto">
+                          <Button variant="outline" size="sm" className="min-w-0 px-2" onClick={() => { setEditUserId(editUserId === u.id ? null : u.id); setEditNewPw(""); setEditPwError(""); }}>Change PW</Button>
+                          <Button variant="outline" size="sm" onClick={() => handleToggleBlock(u.id)} className={u.blocked ? "min-w-0 px-2 border-primary text-primary hover:bg-primary/10" : "min-w-0 px-2 border-amber-500 text-amber-700 hover:bg-amber-50"}>
                             {u.blocked ? "Unblock" : "Block"}
                           </Button>
-                          <Button variant="outline" size="sm" onClick={() => { if (window.confirm(`Delete user "${u.name || u.email}"?`)) handleDeleteUser(u.id); }} className="border-red-400 text-red-600 hover:bg-red-50">Delete</Button>
+                          <Button variant="outline" size="sm" className="min-w-0 px-2 border-red-400 text-red-600 hover:bg-red-50" onClick={() => { if (window.confirm(`Delete user "${u.name || u.email}"?`)) handleDeleteUser(u.id); }}>Delete</Button>
                         </div>
                       </div>
                       {editUserId === u.id && (
-                        <div className="mt-2.5 flex gap-2 items-center flex-wrap">
-                          <Input type="text" value={editNewPw} onChange={e => { setEditNewPw(e.target.value); setEditPwError(""); }} placeholder="New password (min 4)" className="w-auto flex-[1_1_160px]" />
-                          <Button size="sm" onClick={() => handleChangePassword(u.id)} className="bg-green-600 hover:bg-green-700 text-white">Save</Button>
-                          <Button variant="outline" size="sm" onClick={() => { setEditUserId(null); setEditNewPw(""); setEditPwError(""); }}>Cancel</Button>
+                        <div className="mt-2.5 flex flex-col gap-2 sm:flex-row sm:items-center sm:flex-wrap">
+                          <Input type="text" value={editNewPw} onChange={e => { setEditNewPw(e.target.value); setEditPwError(""); }} placeholder="New password (min 4)" className="w-full sm:w-auto sm:flex-[1_1_160px]" />
+                          <div className="flex gap-2">
+                            <Button size="sm" onClick={() => handleChangePassword(u.id)}>Save</Button>
+                            <Button variant="outline" size="sm" onClick={() => { setEditUserId(null); setEditNewPw(""); setEditPwError(""); }}>Cancel</Button>
+                          </div>
                           {editPwError && <span className="text-[12px] text-red-600">{editPwError}</span>}
                         </div>
                       )}
@@ -1138,28 +1165,30 @@ function AdminPage({ schools, setSchools, setSchoolStatus, onSignOut, onResetAll
                   {usersList.filter(u => u.userType === "school" || u.userType === "admin-created" || u.userType === "principal" || u.userType === "teacher").map(u => {
                     const schoolName = (schools || []).find(s => s.id === u.schoolId)?.settings?.schoolName || (schools || []).find(s => s.id === u.schoolId)?.name || (u.schoolId ? u.schoolId.slice(0,8)+"…" : "—");
                     const roleLabel = u.userType==="principal"?"Principal":u.userType==="teacher"?"Teacher":u.userType==="school"?"School Operator":"Admin-Created";
-                    const roleCls = u.userType==="principal"?"bg-green-50 text-green-800":u.userType==="teacher"?"bg-yellow-50 text-yellow-800":u.userType==="school"?"bg-blue-50 text-blue-800":"bg-purple-50 text-purple-800";
+                    const roleCls = u.userType==="principal"?"bg-primary/10 text-primary":u.userType==="teacher"?"bg-amber-50 text-amber-800":u.userType==="school"?"bg-sky-50 text-sky-800":"bg-indigo-50 text-indigo-800";
                     return (
-                      <div key={u.id} className={`px-3.5 py-3 rounded-lg border ${u.blocked ? "bg-red-50 border-red-200" : "bg-slate-50 border-slate-200"}`}>
-                        <div className="flex items-center gap-2.5 flex-wrap">
-                          <div className="flex-1 min-w-[160px]">
-                            <div className="font-bold text-slate-800 text-sm">{u.name || "—"} <span className={`text-[11px] px-1.5 py-0.5 rounded ${roleCls} ml-1`}>{roleLabel}</span></div>
-                            <div className="text-xs text-slate-500">{u.email} · {schoolName}</div>
-                            <div className="text-[11px] text-slate-400 mt-0.5">Password: <strong className="font-mono">{u.password}</strong>{u.blocked && <span className="ml-2 text-red-600 font-bold">BLOCKED</span>}</div>
+                      <div key={u.id} className={`px-3 py-3 sm:px-3.5 rounded-lg border min-w-0 ${u.blocked ? "bg-red-50 border-red-200" : "bg-slate-50 border-slate-200"}`}>
+                        <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:flex-wrap">
+                          <div className="flex-1 min-w-0">
+                            <div className="font-bold text-slate-800 text-sm break-words">{u.name || "—"} <span className={`text-[11px] px-1.5 py-0.5 rounded ${roleCls} ml-1 inline-block`}>{roleLabel}</span></div>
+                            <div className="text-xs text-slate-500 break-all">{u.email} · {schoolName}</div>
+                            <div className="text-[11px] text-slate-400 mt-0.5 break-all">Password: <strong className="font-mono">{u.password}</strong>{u.blocked && <span className="ml-2 text-red-600 font-bold">BLOCKED</span>}</div>
                           </div>
-                          <div className="flex gap-1.5 flex-wrap">
-                            <Button variant="outline" size="sm" onClick={() => { setEditUserId(editUserId === u.id ? null : u.id); setEditNewPw(""); setEditPwError(""); }}>Change PW</Button>
-                            <Button variant="outline" size="sm" onClick={() => handleToggleBlock(u.id)} className={u.blocked ? "border-green-600 text-green-700 hover:bg-green-50" : "border-amber-500 text-amber-700 hover:bg-amber-50"}>
+                          <div className="grid grid-cols-3 gap-1.5 sm:flex sm:flex-wrap">
+                            <Button variant="outline" size="sm" className="min-w-0 px-2" onClick={() => { setEditUserId(editUserId === u.id ? null : u.id); setEditNewPw(""); setEditPwError(""); }}>Change PW</Button>
+                            <Button variant="outline" size="sm" onClick={() => handleToggleBlock(u.id)} className={u.blocked ? "min-w-0 px-2 border-primary text-primary hover:bg-primary/10" : "min-w-0 px-2 border-amber-500 text-amber-700 hover:bg-amber-50"}>
                               {u.blocked ? "Unblock" : "Block"}
                             </Button>
-                            <Button variant="outline" size="sm" onClick={() => { if (window.confirm(`Delete user "${u.name || u.email}"?`)) handleDeleteUser(u.id); }} className="border-red-400 text-red-600 hover:bg-red-50">Delete</Button>
+                            <Button variant="outline" size="sm" className="min-w-0 px-2 border-red-400 text-red-600 hover:bg-red-50" onClick={() => { if (window.confirm(`Delete user "${u.name || u.email}"?`)) handleDeleteUser(u.id); }}>Delete</Button>
                           </div>
                         </div>
                         {editUserId === u.id && (
-                          <div className="mt-2.5 flex gap-2 items-center flex-wrap">
-                            <Input type="text" value={editNewPw} onChange={e => { setEditNewPw(e.target.value); setEditPwError(""); }} placeholder="New password (min 4)" className="w-auto flex-[1_1_160px]" />
-                            <Button size="sm" onClick={() => handleChangePassword(u.id)} className="bg-green-600 hover:bg-green-700 text-white">Save</Button>
-                            <Button variant="outline" size="sm" onClick={() => { setEditUserId(null); setEditNewPw(""); setEditPwError(""); }}>Cancel</Button>
+                          <div className="mt-2.5 flex flex-col gap-2 sm:flex-row sm:items-center sm:flex-wrap">
+                            <Input type="text" value={editNewPw} onChange={e => { setEditNewPw(e.target.value); setEditPwError(""); }} placeholder="New password (min 4)" className="w-full sm:w-auto sm:flex-[1_1_160px]" />
+                            <div className="flex gap-2">
+                              <Button size="sm" onClick={() => handleChangePassword(u.id)}>Save</Button>
+                              <Button variant="outline" size="sm" onClick={() => { setEditUserId(null); setEditNewPw(""); setEditPwError(""); }}>Cancel</Button>
+                            </div>
                             {editPwError && <span className="text-[12px] text-red-600">{editPwError}</span>}
                           </div>
                         )}
@@ -1186,14 +1215,14 @@ function AdminPage({ schools, setSchools, setSchoolStatus, onSignOut, onResetAll
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleCreateSchool} className="flex flex-col gap-3 max-w-[420px]">
+              <form onSubmit={handleCreateSchool} className="flex flex-col gap-3 w-full max-w-[420px]">
                 <div className="space-y-1.5"><Label>School Name</Label><Input type="text" value={csName} onChange={e => setCsName(e.target.value)} placeholder="e.g. PSMS Lahore" /></div>
                 <div className="space-y-1.5"><Label>Principal / Headmaster Name</Label><Input type="text" value={csAdminName} onChange={e => setCsAdminName(e.target.value)} placeholder="e.g. Mr. Ahmed Khan" /></div>
-                <div className="space-y-1.5"><Label>Login Email</Label><Input type="email" value={csEmail} onChange={e => setCsEmail(e.target.value)} placeholder="school@example.edu" /></div>
-                <div className="space-y-1.5"><Label>Login Password</Label><Input type="password" value={csPassword} onChange={e => setCsPassword(e.target.value)} placeholder="Min 4 characters" minLength={4} /></div>
-                {csError && <div className="px-3 py-2 bg-red-50 border border-red-200 text-red-700 rounded-lg text-xs">{csError}</div>}
-                {csSuccess && <div className="px-3 py-2 bg-green-50 border border-green-200 text-green-700 rounded-lg text-xs">{csSuccess}</div>}
-                <Button type="submit" className="self-start">Create School &amp; Principal Account</Button>
+                <div className="space-y-1.5"><Label>Login Email</Label><Input type="email" value={csEmail} onChange={e => setCsEmail(e.target.value)} placeholder="school@example.edu" autoComplete="username" /></div>
+                <div className="space-y-1.5"><Label>Login Password</Label><Input type="password" value={csPassword} onChange={e => setCsPassword(e.target.value)} placeholder="Min 4 characters" minLength={4} autoComplete="new-password" /></div>
+                {csError && <div className="px-3 py-2 bg-red-50 border border-red-200 text-red-700 rounded-lg text-xs break-words">{csError}</div>}
+                {csSuccess && <div className="px-3 py-2 bg-primary/10 border border-primary/20 text-primary rounded-lg text-xs break-words">{csSuccess}</div>}
+                <Button type="submit" className="w-full sm:w-auto sm:self-start">Create School &amp; Principal Account</Button>
               </form>
             </CardContent>
           </Card>
@@ -1201,13 +1230,13 @@ function AdminPage({ schools, setSchools, setSchoolStatus, onSignOut, onResetAll
           {/* All schools list */}
           <Card className="mb-5">
             <CardHeader className="pb-1">
-              <div className="flex items-center justify-between gap-2.5 flex-wrap">
-                <div>
+              <div className="flex flex-col gap-2.5 sm:flex-row sm:items-start sm:justify-between">
+                <div className="min-w-0">
                   <CardTitle className="text-[15px] text-slate-800">All Schools</CardTitle>
                   <CardDescription className="text-[13px] mt-0.5">Create Login saves to the worldwide cloud. Any device can sign in with that email/password.</CardDescription>
                 </div>
                 {isSupabaseConfigured && (
-                  <Button variant="outline" size="sm" onClick={() => pullUsersFromCloud()} disabled={usersSyncing} className="border-blue-300 bg-blue-50 text-blue-700 hover:bg-blue-100 shrink-0">
+                  <Button variant="outline" size="sm" onClick={() => pullUsersFromCloud()} disabled={usersSyncing} className="w-full sm:w-auto border-blue-300 bg-blue-50 text-blue-700 hover:bg-blue-100 shrink-0">
                     {usersSyncing ? "Syncing…" : "☁ Refresh logins"}
                   </Button>
                 )}
@@ -1228,29 +1257,31 @@ function AdminPage({ schools, setSchools, setSchoolStatus, onSignOut, onResetAll
                     });
                     const hasLogin = linkedUsers.length > 0;
                     return (
-                      <div key={s.id} className={`px-3.5 py-3 rounded-lg border ${status === "deleted" ? "bg-red-50 border-red-200" : "bg-slate-50 border-slate-200"}`}>
-                        <div className="flex items-center gap-2.5 flex-wrap">
-                          <div className="flex-[1_1_180px]">
-                            <strong className="text-slate-800">{sName}</strong>
-                            <span className={`ml-2 text-[11px] px-1.5 py-0.5 rounded ${status === "deleted" ? "bg-red-100 text-red-700" : status === "stopped" ? "bg-yellow-100 text-yellow-800" : "bg-green-100 text-green-800"}`}>
-                              {status === "deleted" ? "Deleted" : status === "stopped" ? "Stopped" : "Active"}
-                            </span>
-                            {hasLogin && (
-                              <span className="ml-2 text-[11px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700">
-                                Login: {linkedUsers.map(u => u.email).join(", ")}
+                      <div key={s.id} className={`px-3 py-3 sm:px-3.5 rounded-lg border min-w-0 ${status === "deleted" ? "bg-red-50 border-red-200" : "bg-slate-50 border-slate-200"}`}>
+                        <div className="flex flex-col gap-2.5 sm:flex-row sm:items-start sm:flex-wrap">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <strong className="text-slate-800 break-words">{sName}</strong>
+                              <span className={`text-[11px] px-1.5 py-0.5 rounded ${status === "deleted" ? "bg-red-100 text-red-700" : status === "stopped" ? "bg-yellow-100 text-yellow-800" : "bg-primary/10 text-primary"}`}>
+                                {status === "deleted" ? "Deleted" : status === "stopped" ? "Stopped" : "Active"}
                               </span>
-                            )}
-                            {!hasLogin && status !== "deleted" && (
-                              <span className="ml-2 text-[11px] px-1.5 py-0.5 rounded bg-red-100 text-red-700">No login account</span>
-                            )}
+                              {hasLogin && (
+                                <span className="text-[11px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 break-all">
+                                  Login: {linkedUsers.map(u => u.email).join(", ")}
+                                </span>
+                              )}
+                              {!hasLogin && status !== "deleted" && (
+                                <span className="text-[11px] px-1.5 py-0.5 rounded bg-red-100 text-red-700">No login account</span>
+                              )}
+                            </div>
                           </div>
-                          <div className="flex gap-1.5 flex-wrap">
-                            <Button variant="outline" size="sm" onClick={() => setViewDetailsId(viewDetailsId === s.id ? null : s.id)}>Details</Button>
+                          <div className="grid grid-cols-2 gap-1.5 sm:flex sm:flex-wrap">
+                            <Button variant="outline" size="sm" className="min-w-0" onClick={() => setViewDetailsId(viewDetailsId === s.id ? null : s.id)}>Details</Button>
                             {!hasLogin && status !== "deleted" && (
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="border-blue-500 bg-blue-50 text-blue-700 hover:bg-blue-100 font-semibold"
+                                className="min-w-0 border-blue-500 bg-blue-50 text-blue-700 hover:bg-blue-100 font-semibold"
                                 onClick={async () => {
                                   const cloud = await ensureCloudReady();
                                   if (!cloud?.ok) {
@@ -1324,18 +1355,18 @@ function AdminPage({ schools, setSchools, setSchoolStatus, onSignOut, onResetAll
                                 Create Login
                               </Button>
                             )}
-                            {status !== "deleted" && <Button variant="outline" size="sm" onClick={() => { if(window.confirm(`Delete school "${sName}"?`)) setSchoolStatus(s.id, "deleted"); }} className="border-red-400 text-red-600 hover:bg-red-50">Delete</Button>}
-                            {status === "active" && <Button variant="outline" size="sm" onClick={() => setSchoolStatus(s.id, "stopped")} className="border-amber-500 text-amber-700 hover:bg-amber-50">Stop</Button>}
-                            {status === "stopped" && <Button variant="outline" size="sm" onClick={() => setSchoolStatus(s.id, "active")} className="border-green-600 text-green-700 hover:bg-green-50">Start</Button>}
-                            {status === "deleted" && <Button size="sm" onClick={() => setSchoolStatus(s.id, "active")} className="bg-green-600 hover:bg-green-700 text-white">Restore</Button>}
+                            {status !== "deleted" && <Button variant="outline" size="sm" onClick={() => { if(window.confirm(`Delete school "${sName}"?`)) setSchoolStatus(s.id, "deleted"); }} className="min-w-0 border-red-400 text-red-600 hover:bg-red-50">Delete</Button>}
+                            {status === "active" && <Button variant="outline" size="sm" onClick={() => setSchoolStatus(s.id, "stopped")} className="min-w-0 border-amber-500 text-amber-700 hover:bg-amber-50">Stop</Button>}
+                            {status === "stopped" && <Button variant="outline" size="sm" onClick={() => setSchoolStatus(s.id, "active")} className="min-w-0 border-primary text-primary hover:bg-primary/10">Start</Button>}
+                            {status === "deleted" && <Button size="sm" className="min-w-0" onClick={() => setSchoolStatus(s.id, "active")}>Restore</Button>}
                           </div>
                         </div>
                         {viewDetailsId === s.id && (
-                          <div className="mt-2.5 p-2.5 bg-white rounded-md border border-slate-200 text-xs text-slate-700 flex flex-col gap-1">
-                            <div><strong>ID:</strong> <span className="font-mono">{s.id}</span></div>
+                          <div className="mt-2.5 p-2.5 bg-white rounded-md border border-slate-200 text-xs text-slate-700 flex flex-col gap-1 break-words">
+                            <div><strong>ID:</strong> <span className="font-mono break-all">{s.id}</span></div>
                             <div><strong>School Name:</strong> {s.settings?.schoolName || "—"}</div>
                             <div><strong>School Code:</strong> {s.settings?.schoolCode || "—"}</div>
-                            <div><strong>Email:</strong> {s.settings?.schoolEmail || "—"}</div>
+                            <div><strong>Email:</strong> <span className="break-all">{s.settings?.schoolEmail || "—"}</span></div>
                             <div><strong>Principal:</strong> {s.settings?.principalName || "—"}</div>
                             <div><strong>Login accounts:</strong> {hasLogin ? linkedUsers.map(u => u.email).join(", ") : "None — create a login to sign in"}</div>
                             <div><strong>Classes:</strong> {(s.settings?.classes || []).length} · <strong>Students:</strong> {(s.students || []).length} · <strong>Staff:</strong> {(s.staffProfiles || []).length}</div>
@@ -1360,13 +1391,13 @@ function AdminPage({ schools, setSchools, setSchoolStatus, onSignOut, onResetAll
             </CardHeader>
             <CardContent>
               {resetSchoolMsg && (
-                <p className={`text-[13px] mb-3 ${resetSchoolMsg.startsWith("Reset failed") ? "text-red-700" : "text-green-700"}`}>{resetSchoolMsg}</p>
+                <p className={`text-[13px] mb-3 ${resetSchoolMsg.startsWith("Reset failed") ? "text-red-700" : "text-primary"}`}>{resetSchoolMsg}</p>
               )}
               <div className="flex flex-col gap-2">
                 {(schools || []).filter(s => s.status !== "deleted").map(s => (
-                  <div key={s.id} className="flex items-center gap-3 px-3.5 py-2.5 bg-red-50 rounded-lg">
-                    <span className="flex-1 text-[13px] font-semibold text-slate-800">{s.settings?.schoolName || s.name || s.id}</span>
-                    <Button variant="destructive" size="sm" disabled={resetSchoolBusyId===s.id} onClick={() => { handleResetSchool(s); }} className="shrink-0">
+                  <div key={s.id} className="flex flex-col gap-2 sm:flex-row sm:items-center px-3 py-2.5 sm:px-3.5 bg-red-50 rounded-lg min-w-0">
+                    <span className="flex-1 text-[13px] font-semibold text-slate-800 break-words min-w-0">{s.settings?.schoolName || s.name || s.id}</span>
+                    <Button variant="destructive" size="sm" disabled={resetSchoolBusyId===s.id} onClick={() => { handleResetSchool(s); }} className="w-full sm:w-auto shrink-0">
                       {resetSchoolBusyId===s.id ? "Resetting..." : "Reset School"}
                     </Button>
                   </div>
@@ -1383,7 +1414,7 @@ function AdminPage({ schools, setSchools, setSchoolStatus, onSignOut, onResetAll
             </CardHeader>
             <CardContent>
               <p className="text-[13px] text-red-800 font-semibold mb-4">This action cannot be undone.</p>
-              <Button variant="destructive" onClick={onResetAll} className="bg-red-900 hover:bg-red-800">Reset Everything</Button>
+              <Button variant="destructive" onClick={onResetAll} className="w-full sm:w-auto bg-red-900 hover:bg-red-800">Reset Everything</Button>
             </CardContent>
           </Card>
         </>)}

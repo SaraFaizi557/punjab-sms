@@ -92,7 +92,7 @@ export function ClassSubjCard({cls,examSubjects,timetableSubjects,onAddExam,onRe
           <p className="mb-2 text-xs font-semibold text-muted-foreground">Subjects for Timetable</p>
           <div className="mb-2 flex flex-wrap gap-1.5">
             {timetableSubjects.map(s=>(
-              <Badge key={`tt_${s}`} className="gap-1 bg-green-100 text-green-800 hover:bg-green-100">
+              <Badge key={`tt_${s}`} className="gap-1 bg-primary/10 text-primary hover:bg-primary/10">
                 {s}
                 <Button type="button" variant="ghost" size="icon-xs" className="ml-0.5 size-4 text-xs" onClick={()=>onRemoveTimetable(s)}>×</Button>
               </Badge>
@@ -1599,7 +1599,7 @@ export function SettingsPage({settings,setSettings,setSchools,students,setStuden
               <Input type="password" value={opPassword} onChange={e=>setOpPassword(e.target.value)} placeholder="Min 4 characters"/>
             </div>
             {opError&&<div className="rounded-md bg-destructive/10 px-3 py-2 text-xs text-destructive">{opError}</div>}
-            {opSuccess&&<div className="rounded-md bg-green-50 px-3 py-2 text-xs text-green-800">{opSuccess}</div>}
+            {opSuccess&&<div className="rounded-md bg-primary/10 px-3 py-2 text-xs text-primary">{opSuccess}</div>}
             <Button type="button" onClick={async()=>{
               setOpError("");setOpSuccess("");
               if(!opName.trim()){setOpError("Enter full name.");return;}
@@ -1696,7 +1696,7 @@ export function SettingsPage({settings,setSettings,setSchools,students,setStuden
               <Input type="password" value={tcPassword} onChange={e=>setTcPassword(e.target.value)} placeholder="Min 4 characters"/>
             </div>
             {tcError&&<div className="rounded-md bg-destructive/10 px-3 py-2 text-xs text-destructive">{tcError}</div>}
-            {tcSuccess&&<div className="rounded-md bg-green-50 px-3 py-2 text-xs text-green-800">{tcSuccess}</div>}
+            {tcSuccess&&<div className="rounded-md bg-primary/10 px-3 py-2 text-xs text-primary">{tcSuccess}</div>}
             <Button type="button" onClick={async()=>{
               setTcError("");setTcSuccess("");
               if(!tcName.trim()){setTcError("Select a staff member.");return;}
@@ -2035,7 +2035,7 @@ export function SettingsPage({settings,setSettings,setSchools,students,setStuden
               </TabsContent>
             </Tabs>
             <div className="mt-4">
-              <Badge variant="secondary" className="bg-green-100 text-green-800 hover:bg-green-100">Changes saved automatically</Badge>
+              <Badge variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/10">Changes saved automatically</Badge>
             </div>
           </CardContent>
         </Card>

@@ -88,7 +88,7 @@ export function FeeOverviewPanel({ settings, students, activeSchoolId, onGoTab }
 
   const cards = [
     { label: "Expected", value: formatCurrency(summary.expected), hint: `${summary.totalStudents} students × ${feeAmount}`, tab: "collection", accentClass: "border-t-primary" },
-    { label: "Collected", value: formatCurrency(summary.collected), hint: `${summary.rate}% · ${summary.paidCount} paid`, tab: "receipts", accentClass: "border-t-green-700" },
+    { label: "Collected", value: formatCurrency(summary.collected), hint: `${summary.rate}% · ${summary.paidCount} paid`, tab: "receipts", accentClass: "border-t-primary" },
     { label: "Outstanding dues", value: formatCurrency(summary.pending), hint: `${summary.duesCount} students`, tab: "dues", accentClass: "border-t-red-700" },
     { label: "Expenses (month)", value: formatCurrency(summary.expenseTotal), hint: `Net ${formatCurrency(summary.net)}`, tab: "expenses", accentClass: "border-t-amber-600" },
   ];
@@ -667,7 +667,7 @@ export function FeeReportsPanel({ settings, students, activeSchoolId }) {
                   <div className="h-24 flex items-end justify-center">
                     <div
                       style={{ height: `${Math.max(h, m.collected ? 4 : 0)}%` }}
-                      className="w-[70%] bg-green-700 rounded-t"
+                      className="w-[70%] bg-primary rounded-t"
                     />
                   </div>
                   <div className="text-[10px] font-bold mt-1">{m.label}</div>
