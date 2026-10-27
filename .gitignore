@@ -19,3 +19,5 @@ NUL.*
 Photos/**/*.{jpg,jpeg,jpe,jfif,png,webp,bmp,gif,heic,heif,avif,tif,tiff,ico,svg}
 !Photos/**/.gitkeep
 !Photos/README.txt
+
+.vercel
