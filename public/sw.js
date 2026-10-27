@@ -1,12 +1,17 @@
-/* Punjab-SMS service worker — network-first shell + versioned PWA icons. */
-const ASSET_REV = "20261027-emblem";
+/* Punjab-SMS service worker — versioned icon paths for Android/iOS PWA refresh. */
+const ASSET_REV = "20261027-icon-auto";
 const CACHE_VERSION = `psms-cache-${ASSET_REV}`;
 
 function appRootUrl() {
   return new URL(".", self.location).href;
 }
 
-function versioned(fileName) {
+/** Launcher icons live under /i/{rev}/ so OS sees a new URL when the mark changes. */
+function iconFile(fileName) {
+  return new URL(`i/${ASSET_REV}/${fileName}`, appRootUrl()).href;
+}
+
+function stamped(fileName) {
   return new URL(`${fileName}?v=${encodeURIComponent(ASSET_REV)}`, appRootUrl()).href;
 }
 
@@ -15,13 +20,14 @@ function appShellUrls() {
   return {
     root,
     index: new URL("index.html", root).href,
-    manifest: versioned("manifest.webmanifest"),
-    favicon: versioned("favicon.png"),
-    icon192: versioned("pwa-icon-192.png"),
-    icon512: versioned("pwa-icon-512.png"),
-    iconMaskable: versioned("pwa-icon-512-maskable.png"),
-    apple: versioned("apple-touch-icon.png"),
-    brand: versioned("app-brand-logo.png"),
+    manifest: stamped("manifest.webmanifest"),
+    rev: stamped("pwa-asset-rev.json"),
+    favicon: stamped("favicon.png"),
+    icon192: iconFile("pwa-icon-192.png"),
+    icon512: iconFile("pwa-icon-512.png"),
+    iconMaskable: iconFile("pwa-icon-512-maskable.png"),
+    apple: iconFile("apple-touch-icon.png"),
+    brand: stamped("app-brand-logo.png"),
   };
 }
 
@@ -31,8 +37,9 @@ function isHtmlNavigation(request) {
   return typeof accept === "string" && accept.includes("text/html");
 }
 
-function isVersionedAsset(pathname) {
+function isIconOrManifestPath(pathname) {
   return (
+    pathname.includes("/i/") ||
     pathname.endsWith("/manifest.webmanifest") ||
     pathname.endsWith("/favicon.png") ||
     pathname.endsWith("/favicon.svg") ||
@@ -51,6 +58,7 @@ async function precacheIcons(cache) {
     urls.root,
     urls.index,
     urls.manifest,
+    urls.rev,
     urls.favicon,
     urls.icon192,
     urls.icon512,
@@ -64,7 +72,7 @@ async function precacheIcons(cache) {
         const res = await fetch(url, { cache: "reload" });
         if (res && res.ok) await cache.put(url, res.clone());
       } catch {
-        /* offline install — ignore */
+        /* offline install */
       }
     }),
   );
@@ -85,7 +93,6 @@ self.addEventListener("activate", (event) => {
     (async () => {
       const keys = await caches.keys();
       await Promise.all(keys.filter((k) => k !== CACHE_VERSION).map((k) => caches.delete(k)));
-      // Warm the new icon set so launchers/clients see the updated mark ASAP.
       try {
         const cache = await caches.open(CACHE_VERSION);
         await precacheIcons(cache);
@@ -149,17 +156,13 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Manifest + icons: always try network first (bypass HTTP cache) so every device gets new art.
-  if (isVersionedAsset(path)) {
+  if (isIconOrManifestPath(path)) {
     event.respondWith(
       fetch(event.request, { cache: "no-store" })
         .then((networkRes) => {
           if (!networkRes || !networkRes.ok) return networkRes;
           const copy = networkRes.clone();
-          caches.open(CACHE_VERSION).then((cache) => {
-            cache.put(event.request, copy);
-            // Also store under the versioned shell key when paths match.
-          }).catch(() => undefined);
+          caches.open(CACHE_VERSION).then((cache) => cache.put(event.request, copy)).catch(() => undefined);
           return networkRes;
         })
         .catch(() => caches.match(event.request)),

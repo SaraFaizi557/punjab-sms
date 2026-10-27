@@ -4,6 +4,7 @@ import "./index.css";
 import "./responsive.css";
 import Root from "./Root.jsx";
 import { initSupabaseCloud } from "./lib/supabase.js";
+import { applyIconHeadLinks, syncPwaIcons } from "./pwaIconSync.js";
 
 /** Keys left by the removed Finance module (see git: FinanceContext + docs). */
 function removeLegacyFinanceStorageKeys() {
@@ -65,8 +66,13 @@ function registerServiceWorker() {
           if (document.visibilityState === "visible") check();
         });
         window.addEventListener("online", check);
-        // Idle / background PWAs still discover icon + shell updates.
-        window.setInterval(check, 30 * 60 * 1000);
+        // Standalone installs check often so Android WebAPK can refresh the launcher icon.
+        const intervalMs =
+          window.matchMedia("(display-mode: standalone)").matches ||
+          window.navigator.standalone === true
+            ? 5 * 60 * 1000
+            : 30 * 60 * 1000;
+        window.setInterval(check, intervalMs);
         check();
 
         const activateWaiting = (worker) => {
@@ -93,6 +99,9 @@ function registerServiceWorker() {
 registerServiceWorker();
 
 function boot() {
+  // Point <head> at versioned icon paths immediately (helps Android WebAPK refresh).
+  applyIconHeadLinks();
+
   // Paint immediately — do not await cloud/network before first React frame.
   // HTML #psms-boot-splash inside #root is replaced when React commits.
   createRoot(document.getElementById("root")).render(
@@ -106,6 +115,19 @@ function boot() {
   void initSupabaseCloud().catch((err) => {
     console.warn("Cloud init failed", err);
   });
+
+  // Installed PWA: pull new icon rev, prefetch paths, reload Android WebAPK when needed.
+  if (isProduction) {
+    void syncPwaIcons().catch(() => undefined);
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") {
+        void syncPwaIcons().catch(() => undefined);
+      }
+    });
+    window.addEventListener("online", () => {
+      void syncPwaIcons().catch(() => undefined);
+    });
+  }
 }
 
 boot();

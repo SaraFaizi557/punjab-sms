@@ -62,17 +62,22 @@ function patchHtmlPublicLinks(base) {
     name: "psms-html-public-links",
     transformIndexHtml(html) {
       const rev = readPwaAssetRev();
-      // Always stamp cache-bust query on icon/manifest links (dev + build).
+      const iconBase = `/i/${rev}`;
       let next = html;
-      for (const name of [
-        "favicon.png",
-        "favicon.svg",
-        "apple-touch-icon.png",
-        "pwa-icon-192.png",
-        "pwa-icon-512.png",
-        "manifest.webmanifest",
-        "app-brand-logo.png",
-      ]) {
+      // Path-versioned launcher icons (Android/iOS install capture)
+      next = next.replace(
+        /((?:href|src)=")\/?(?:i\/[^/]+\/)?apple-touch-icon\.png(?:\?v=[^"]*)?(")/g,
+        `$1${iconBase}/apple-touch-icon.png$2`,
+      );
+      next = next.replace(
+        /((?:href|src)=")\/?(?:i\/[^/]+\/)?pwa-icon-192\.png(?:\?v=[^"]*)?(")/g,
+        `$1${iconBase}/pwa-icon-192.png$2`,
+      );
+      next = next.replace(
+        /((?:href|src)=")\/?(?:i\/[^/]+\/)?pwa-icon-512\.png(?:\?v=[^"]*)?(")/g,
+        `$1${iconBase}/pwa-icon-512.png$2`,
+      );
+      for (const name of ["favicon.png", "favicon.svg", "manifest.webmanifest", "app-brand-logo.png"]) {
         const re = new RegExp(`((?:href|src)="/${name.replace(".", "\\.")})(?:\\?v=[^"]*)?(")`, "g");
         next = next.replace(re, `$1?v=${encodeURIComponent(rev)}$2`);
       }
@@ -80,10 +85,10 @@ function patchHtmlPublicLinks(base) {
       return next
         .replaceAll(`href="/favicon.png?v=${rev}"`, `href="${base}favicon.png?v=${rev}"`)
         .replaceAll(`href="/favicon.svg?v=${rev}"`, `href="${base}favicon.svg?v=${rev}"`)
-        .replaceAll(`href="/apple-touch-icon.png?v=${rev}"`, `href="${base}apple-touch-icon.png?v=${rev}"`)
+        .replaceAll(`href="${iconBase}/apple-touch-icon.png"`, `href="${base}i/${rev}/apple-touch-icon.png"`)
         .replaceAll(`href="/manifest.webmanifest?v=${rev}"`, `href="${base}manifest.webmanifest?v=${rev}"`)
-        .replaceAll(`href="/pwa-icon-192.png?v=${rev}"`, `href="${base}pwa-icon-192.png?v=${rev}"`)
-        .replaceAll(`href="/pwa-icon-512.png?v=${rev}"`, `href="${base}pwa-icon-512.png?v=${rev}"`)
+        .replaceAll(`href="${iconBase}/pwa-icon-192.png"`, `href="${base}i/${rev}/pwa-icon-192.png"`)
+        .replaceAll(`href="${iconBase}/pwa-icon-512.png"`, `href="${base}i/${rev}/pwa-icon-512.png"`)
         .replaceAll(`src="/app-brand-logo.png?v=${rev}"`, `src="${base}app-brand-logo.png?v=${rev}"`);
     },
   };
@@ -109,12 +114,52 @@ function withAssetRev(src, rev) {
   return `${pathPart}?v=${encodeURIComponent(rev)}`;
 }
 
-/** Align PWA manifest with `base` + stamp icon cache-bust rev after copy to `dist/`. */
+const PWA_ICON_FILES = [
+  "pwa-icon-192.png",
+  "pwa-icon-512.png",
+  "pwa-icon-512-maskable.png",
+  "apple-touch-icon.png",
+  "pwa-ico.png",
+];
+
+/** Copy launcher icons into /i/{rev}/ so Android WebAPK sees brand-new icon URLs. */
+function publishVersionedIconDir(distRoot, rev) {
+  const dest = path.join(distRoot, "i", rev);
+  fs.mkdirSync(dest, { recursive: true });
+  for (const name of PWA_ICON_FILES) {
+    const src = path.join(distRoot, name);
+    if (fs.existsSync(src)) fs.copyFileSync(src, path.join(dest, name));
+  }
+  return `/i/${rev}`;
+}
+
+function toVersionedIconSrc(src, rev, root) {
+  if (typeof src !== "string") return src;
+  const bare = src.split("?")[0];
+  const file = bare.split("/").pop();
+  if (!file || !PWA_ICON_FILES.includes(file) && file !== "apple-touch-icon.png") {
+    // non-icon: keep query stamp
+    const stamped = withAssetRev(bare.startsWith("/") ? bare : `/${bare}`, rev);
+    const q = stamped.indexOf("?");
+    const pathPart = q >= 0 ? stamped.slice(0, q) : stamped;
+    const query = q >= 0 ? stamped.slice(q) : "";
+    if (root && pathPart.startsWith(`${root}/`)) return stamped;
+    return `${root}${pathPart}${query}`;
+  }
+  const pathPart = `${root}/i/${rev}/${file}`.replace(/\/{2,}/g, "/");
+  // ensure leading slash when root is ""
+  const normalized = pathPart.startsWith("/") ? pathPart : `/${pathPart}`;
+  return normalized.replace(/^\/+/, "/");
+}
+
+/** Align PWA manifest with `base` + path-versioned icons after copy to `dist/`. */
 function patchManifestScope(base) {
   return {
     name: "psms-manifest-scope",
     closeBundle() {
       const rev = readPwaAssetRev();
+      const distRoot = path.resolve("dist");
+      const iconBase = publishVersionedIconDir(distRoot, rev);
       const file = path.resolve("dist/manifest.webmanifest");
       if (!fs.existsSync(file)) return;
       const data = JSON.parse(fs.readFileSync(file, "utf8"));
@@ -122,17 +167,16 @@ function patchManifestScope(base) {
       data.scope = base;
       data.id = base;
       const root = base === "/" ? "" : base.replace(/\/$/, "");
-      const prefixSrc = (src) => {
-        if (typeof src !== "string" || !src.startsWith("/")) return src;
-        const stamped = withAssetRev(src, rev);
-        const q = stamped.indexOf("?");
-        const pathPart = q >= 0 ? stamped.slice(0, q) : stamped;
-        const query = q >= 0 ? stamped.slice(q) : "";
-        if (root && pathPart.startsWith(`${root}/`)) return stamped;
-        return `${root}${pathPart}${query}`;
+      const mapIcon = (src) => {
+        if (typeof src !== "string") return src;
+        const fileName = src.split("?")[0].split("/").pop();
+        if (PWA_ICON_FILES.includes(fileName)) {
+          return `${root}${iconBase}/${fileName}`;
+        }
+        return toVersionedIconSrc(src, rev, root);
       };
       if (Array.isArray(data.icons)) {
-        data.icons = data.icons.map((icon) => ({ ...icon, src: prefixSrc(icon.src) }));
+        data.icons = data.icons.map((icon) => ({ ...icon, src: mapIcon(icon.src) }));
       }
       if (Array.isArray(data.shortcuts)) {
         data.shortcuts = data.shortcuts.map((s) => ({
@@ -141,13 +185,12 @@ function patchManifestScope(base) {
             ? `${root}${s.url}`
             : s.url,
           icons: Array.isArray(s.icons)
-            ? s.icons.map((icon) => ({ ...icon, src: prefixSrc(icon.src) }))
+            ? s.icons.map((icon) => ({ ...icon, src: mapIcon(icon.src) }))
             : s.icons,
         }));
       }
       fs.writeFileSync(file, JSON.stringify(data, null, 2));
 
-      // Keep ASSET_REV in the shipped service worker in sync with pwa-asset-rev.json
       const swFile = path.resolve("dist/sw.js");
       if (fs.existsSync(swFile)) {
         let sw = fs.readFileSync(swFile, "utf8");

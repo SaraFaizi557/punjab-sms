@@ -27,6 +27,7 @@ import { Plus, Edit2, Trash2, Upload, Download, Settings, AlertTriangle, Eye, Ey
 import * as feeCore from "./modules/fee/feeCore";
 import { feeService, systemSettingsService, dashboardService } from "./services";
 import PWAInstallBanner from "./PWAInstallBanner";
+import PWAIconRefreshBanner from "./PWAIconRefreshBanner";
 import { APP_BRAND_LOGO_URL } from "./branding.js";
 import { yieldToMain } from "./yieldToMain.js";
 import { UI } from "./uiTokens.js";
@@ -2100,6 +2101,7 @@ function App(){
           </Suspense>
       </AppDashboardShell>
       <PWAInstallBanner />
+      <PWAIconRefreshBanner />
     </div>
     <Dialog
       open={showChangePw}

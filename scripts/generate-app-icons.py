@@ -147,9 +147,41 @@ def write_favicon_svg(master: Image.Image, dest: Path) -> None:
     dest.write_text(svg, encoding="utf-8")
 
 
-def bump_asset_rev() -> str:
+PWA_ICON_FILES = (
+    "pwa-icon-192.png",
+    "pwa-icon-512.png",
+    "pwa-icon-512-maskable.png",
+    "apple-touch-icon.png",
+    "pwa-ico.png",
+)
+
+
+def publish_versioned_icons(rev: str) -> Path:
+    """Copy launcher icons to public/i/{rev}/ (path change forces Android icon refresh)."""
+    import shutil
+
+    dest = OUT_DIR / "i" / rev
+    dest.mkdir(parents=True, exist_ok=True)
+    for name in PWA_ICON_FILES:
+        src = OUT_DIR / name
+        if src.exists():
+            shutil.copy2(src, dest / name)
+    # Keep only the newest few rev folders to avoid unbounded growth
+    i_root = OUT_DIR / "i"
+    if i_root.is_dir():
+        dirs = sorted(
+            [p for p in i_root.iterdir() if p.is_dir()],
+            key=lambda p: p.stat().st_mtime,
+            reverse=True,
+        )
+        for old in dirs[3:]:
+            shutil.rmtree(old, ignore_errors=True)
+    return dest
+
+
+def bump_asset_rev(rev: str | None = None) -> str:
     """New rev so installed PWAs treat icon URLs as changed and refetch."""
-    rev = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M")
+    rev = rev or datetime.now(timezone.utc).strftime("%Y%m%d-%H%M")
     payload = (
         json.dumps(
             {
@@ -162,6 +194,8 @@ def bump_asset_rev() -> str:
     )
     (OUT_DIR / "pwa-asset-rev.json").write_text(payload, encoding="utf-8")
     (ROOT / "src" / "pwa-asset-rev.json").write_text(payload, encoding="utf-8")
+
+    publish_versioned_icons(rev)
 
     sw = OUT_DIR / "sw.js"
     if sw.exists():
@@ -178,31 +212,41 @@ def bump_asset_rev() -> str:
     if manifest.exists():
         data = json.loads(manifest.read_text(encoding="utf-8"))
 
-        def stamp(src: str) -> str:
-            path = str(src).split("?", 1)[0]
-            return f"{path}?v={rev}"
+        def to_versioned(src: str) -> str:
+            file_name = str(src).split("?", 1)[0].rstrip("/").split("/")[-1]
+            if file_name in PWA_ICON_FILES:
+                return f"/i/{rev}/{file_name}"
+            return f"/{file_name}?v={rev}" if not str(src).startswith("/i/") else f"/i/{rev}/{file_name}"
 
         for icon in data.get("icons") or []:
             if isinstance(icon, dict) and "src" in icon:
-                icon["src"] = stamp(icon["src"])
+                icon["src"] = to_versioned(icon["src"])
         for shortcut in data.get("shortcuts") or []:
             for icon in shortcut.get("icons") or []:
                 if isinstance(icon, dict) and "src" in icon:
-                    icon["src"] = stamp(icon["src"])
+                    icon["src"] = to_versioned(icon["src"])
         manifest.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
 
     index = ROOT / "index.html"
     if index.exists():
         html = index.read_text(encoding="utf-8")
-        for name in (
-            "favicon.png",
-            "favicon.svg",
-            "apple-touch-icon.png",
-            "pwa-icon-192.png",
-            "pwa-icon-512.png",
-            "manifest.webmanifest",
-            "app-brand-logo.png",
-        ):
+        # Versioned apple-touch + PWA icons (path-based) for install-time capture
+        html = re.sub(
+            r'(href=")/?(?:i/[^/]+/)?apple-touch-icon\.png(?:\?v=[^"]*)?(")',
+            rf'\1/i/{rev}/apple-touch-icon.png\2',
+            html,
+        )
+        html = re.sub(
+            r'(href=")/?(?:i/[^/]+/)?pwa-icon-192\.png(?:\?v=[^"]*)?(")',
+            rf'\1/i/{rev}/pwa-icon-192.png\2',
+            html,
+        )
+        html = re.sub(
+            r'(href=")/?(?:i/[^/]+/)?pwa-icon-512\.png(?:\?v=[^"]*)?(")',
+            rf'\1/i/{rev}/pwa-icon-512.png\2',
+            html,
+        )
+        for name in ("favicon.png", "favicon.svg", "manifest.webmanifest", "app-brand-logo.png"):
             html = re.sub(
                 rf'((?:href|src)="/{re.escape(name)})(?:\?v=[^"]*)?(")',
                 rf"\1?v={rev}\2",
@@ -210,7 +254,7 @@ def bump_asset_rev() -> str:
             )
         index.write_text(html, encoding="utf-8")
 
-    print(f"bumped PWA asset rev → {rev}")
+    print(f"bumped PWA asset rev → {rev} (icons at /i/{rev}/)")
     return rev
 
 
