@@ -298,7 +298,8 @@ export function AcademicSessionsPanel({
       <CardContent className="p-4">
         <CardTitle className="text-base mb-1">Academic Sessions</CardTitle>
         <CardDescription className="mb-3.5">
-          Exam marks and date sheets are stored per session. Switch the active year to view that data.
+          Education year is <strong>1 April – 31 March</strong> (label e.g. 2025-2026). Exam marks and
+          date sheets are stored per session — switch the active year to view that data.
         </CardDescription>
         <div className="flex flex-wrap gap-2.5 items-end mb-4">
           <div className="flex flex-col gap-1.5">

@@ -34,6 +34,7 @@ export function FeeFinanceModulePage({
   students,
   activeSchoolId,
   setBarSubtitle,
+  currentSession,
 }) {
   const privateSchool = isPrivateSchool(settings);
   const tabs = useMemo(() => feeTabsForSchool(settings), [settings]);
@@ -111,7 +112,12 @@ export function FeeFinanceModulePage({
       {tab === "expenses" && <FeeExpensesPanel activeSchoolId={activeSchoolId} />}
 
       {tab === "reports" && (
-        <FeeReportsPanel settings={settings} students={students} activeSchoolId={activeSchoolId} />
+        <FeeReportsPanel
+          settings={settings}
+          students={students}
+          activeSchoolId={activeSchoolId}
+          currentSession={currentSession}
+        />
       )}
     </ModulePageShell>
   );

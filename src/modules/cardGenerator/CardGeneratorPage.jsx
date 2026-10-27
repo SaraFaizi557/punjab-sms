@@ -24,7 +24,7 @@ const {
   getClassSubjects, isTeachingStaffMember, teachingStaffList, normalizeRollNo,
   findStudentByAdmissionNo, getRollNumberScopeClassIds, findStudentByRollInClass,
   maxNumericFromAdmissionStrings, nextAdmissionNo, maxRollInClass, nextRollNoForClass,
-  stripDuplicateAdmissionsForImport, dedupeStudentsByIdentity, fmtMin, academicSession,
+  stripDuplicateAdmissionsForImport, dedupeStudentsByIdentity, fmtMin, academicSession, formatSessionValidity,
   calcTimes, getTT, setTT, setTTSingleDay, parseABVariantSubject, isABCounterpartSubject,
   getPeriodLabel, timetablePdfPeriodCell, getClassesByPortion, getStaffInPortion,
   isPortionMaskFull, formatPortionMaskLabel, getClassesByPortionMask, getStaffInPortionMask,
@@ -362,7 +362,7 @@ export function StudentCardGeneratorPage({ settings, students, currentSession })
     const idValue = bayFormId || student.admissionNo || student.rollNo || "—";
     const fullName = (student.name || "").trim() || "—";
     const fatherName = (student.fatherName || "").trim() || "—";
-    const validity = "April 2025 to March 2026";
+    const validity = formatSessionValidity(currentSession || academicSession());
     return (
       <div className="student-id-card-front" style={{ position: "relative", width: "100%", maxWidth: ID_CARD_MAX_W, height: ID_CARD_FIXED_H, minHeight: ID_CARD_MIN_H, background: "#fff", borderRadius: 14, overflow: "hidden", border: "1px solid #cbd5e1", boxSizing: "border-box", boxShadow: "0 6px 20px rgba(15,23,42,0.1)", display: "flex", flexDirection: "column" }}>
         <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 148, background: ID_CARD_HEADER_GRADIENT, transform: "skewY(-2.5deg)", transformOrigin: "top left" }} />

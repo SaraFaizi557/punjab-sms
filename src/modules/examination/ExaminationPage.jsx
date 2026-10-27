@@ -920,10 +920,9 @@ export function ExaminationPage({settings:settingsProp,setSettings,students:stud
       ?(presentExams.length?presentExams.join(" + "):"Overall")
       :String(mode||"—");
     const sessionLabel=String(currentSession||"").trim()||academicSession();
-    const sessionYear=String(sessionLabel).match(/\d{4}/)?.[0]||"";
     const examLabel=mode==="overall"
-      ?`OVERALL RESULT${sessionYear?` ${sessionYear}`:""}`
-      :`${String(examLabelRaw).toUpperCase()}${sessionYear?` ${sessionYear}`:""}`;
+      ?`OVERALL RESULT ${sessionLabel}`
+      :`${String(examLabelRaw).toUpperCase()} ${sessionLabel}`;
     const promoBanner=settings.banner;
     const resultSigSrc=settings.resultCardSignature||signImg;
     const principalName=(String(settings.resultCardStampLine1||"").trim()||String(settings.principalName||"").trim()||"Principal");

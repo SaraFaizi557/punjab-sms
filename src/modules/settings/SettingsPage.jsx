@@ -1512,7 +1512,10 @@ export function SettingsPage({settings,setSettings,setSchools,students,setStuden
         <Card className="border-border/70 shadow-sm">
           <CardHeader className="pb-3">
             <CardTitle className="text-base text-primary">Session</CardTitle>
-            <CardDescription>Exam marks and date sheet are saved per session. Switch session to view or edit that year&apos;s data.</CardDescription>
+            <CardDescription>
+              Education year runs <strong>1 April – 31 March</strong> (e.g. 2025-2026). Exam marks and
+              date sheet are saved per session — switch session to view or edit that year&apos;s data.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap items-end gap-3">
@@ -1524,7 +1527,7 @@ export function SettingsPage({settings,setSettings,setSchools,students,setStuden
               </div>
               <div className="space-y-1.5">
                 <Label>Add session</Label>
-                <Input ref={sessionInputRef} type="text" placeholder="e.g. 2025-2026" className="w-[140px]" onKeyDown={e=>{if(e.key==="Enter"){const v=e.target.value.trim();if(v&&addSession){addSession(v);e.target.value="";}}}} />
+                <Input ref={sessionInputRef} type="text" placeholder="2025-2026 (Apr–Mar)" className="w-[160px]" onKeyDown={e=>{if(e.key==="Enter"){const v=e.target.value.trim();if(v&&addSession){addSession(v);e.target.value="";}}}} />
               </div>
               <Button type="button" onClick={()=>{const v=sessionInputRef.current?.value?.trim();if(v&&addSession){addSession(v);if(sessionInputRef.current)sessionInputRef.current.value="";}}}>Add</Button>
             </div>

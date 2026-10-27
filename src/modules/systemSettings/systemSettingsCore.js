@@ -6,11 +6,72 @@ function getStorage(storageOverride) {
   return window.localStorage
 }
 
+/**
+ * Education / academic session: 1 April → 31 March.
+ * Apr–Dec of Y → "Y-(Y+1)"; Jan–Mar of Y → "(Y-1)-Y".
+ */
 export function academicSession(date = new Date()) {
   const year = date.getFullYear()
-  const month = date.getMonth()
+  const month = date.getMonth() // 0 = Jan … 3 = April
   if (month >= 3) return `${year}-${year + 1}`
   return `${year - 1}-${year}`
+}
+
+/** Same rule as academicSession — single source for new-school defaults. */
+export function defaultSession(date = new Date()) {
+  return academicSession(date)
+}
+
+/** Parse "2025-2026" → { startYear: 2025, endYear: 2026 }. */
+export function parseSessionYears(session) {
+  const m = String(session || '').trim().match(/^(\d{4})\s*[-/]\s*(\d{4})$/)
+  if (m) return { startYear: Number(m[1]), endYear: Number(m[2]) }
+  const label = academicSession()
+  const parts = label.split('-').map(Number)
+  return { startYear: parts[0], endYear: parts[1] }
+}
+
+/** Inclusive session bounds: 1 Apr startYear → 31 Mar endYear. */
+export function sessionDateRange(session) {
+  const { startYear, endYear } = parseSessionYears(session)
+  return {
+    startYear,
+    endYear,
+    startDate: `${startYear}-04-01`,
+    endDate: `${endYear}-03-31`,
+    label: `${startYear}-${endYear}`,
+    display: `1 April ${startYear} – 31 March ${endYear}`,
+  }
+}
+
+/** Card / certificate validity text from session label. */
+export function formatSessionValidity(session) {
+  const { startYear, endYear } = parseSessionYears(session || academicSession())
+  return `April ${startYear} to March ${endYear}`
+}
+
+/**
+ * Academic-year month list Apr→Mar for a session (or current session).
+ * Each item: { month, year, value, label } where value is calendar month 1–12.
+ */
+export function academicYearMonths(session) {
+  const { startYear, endYear } = parseSessionYears(session || academicSession())
+  const names = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December',
+  ]
+  const order = [4, 5, 6, 7, 8, 9, 10, 11, 12, 1, 2, 3]
+  return order.map((month) => {
+    const year = month >= 4 ? startYear : endYear
+    return {
+      month,
+      year,
+      value: month,
+      label: `${names[month - 1]} ${year}`,
+      shortLabel: names[month - 1].slice(0, 3),
+      key: `${year}-${String(month).padStart(2, '0')}`,
+    }
+  })
 }
 
 export const normKey = (x) => String(x ?? '').trim().toLowerCase()
@@ -103,12 +164,6 @@ export function getClassLabel(settingsOrClasses, classId) {
   const cls = resolveClass(classes, classId)
   if (!cls) return String(classId)
   return formatClassDisplay(cls)
-}
-
-export function defaultSession(date = new Date()) {
-  const year = date.getFullYear()
-  const month = date.getMonth()
-  return month >= 6 ? `${year}-${year + 1}` : `${year - 1}-${year}`
 }
 
 export function addSessionToList(sessions, newSession) {

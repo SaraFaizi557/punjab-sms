@@ -661,8 +661,18 @@ export function FeeExpensesPanel({ activeSchoolId }) {
   );
 }
 
-export function FeeReportsPanel({ settings, students, activeSchoolId }) {
-  const [year, setYear] = useState(() => new Date().getFullYear());
+export function FeeReportsPanel({ settings, students, activeSchoolId, currentSession }) {
+  const [sessionStartYear, setSessionStartYear] = useState(() => {
+    const label = String(currentSession || "").match(/^(\d{4})/);
+    if (label) return Number(label[1]);
+    const now = new Date();
+    return now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1;
+  });
+  useEffect(() => {
+    const label = String(currentSession || "").match(/^(\d{4})/);
+    if (label) setSessionStartYear(Number(label[1]));
+  }, [currentSession]);
+  const sessionLabel = `${sessionStartYear}-${sessionStartYear + 1}`;
   const [period, setPeriod] = useFeeMonth();
   const feeRecords = useHydratedFees(activeSchoolId);
   const expenses = loadExpenses(activeSchoolId);
@@ -670,13 +680,13 @@ export function FeeReportsPanel({ settings, students, activeSchoolId }) {
   const trend = useMemo(
     () =>
       buildYearlyFeeTrend(feeRecords, {
-        year,
+        session: sessionLabel,
         students,
         classes: settings.classes,
         feeAmount,
         settings,
       }),
-    [feeRecords, year, students, settings, feeAmount],
+    [feeRecords, sessionLabel, students, settings, feeAmount],
   );
   const byCat = expenseTotalsByCategory(expenses, { month: period.month, year: period.year });
   const monthValue = `${period.year}-${String(period.month).padStart(2, "0")}`;
@@ -689,18 +699,19 @@ export function FeeReportsPanel({ settings, students, activeSchoolId }) {
         <CardContent className="p-4">
           <div className="flex flex-wrap justify-between gap-3 mb-3">
             <div>
-              <CardTitle>Yearly collection trend</CardTitle>
+              <CardTitle>Session collection trend</CardTitle>
               <CardDescription className="mt-1">
-                {year}: {formatCurrency(yearCollected)} collected of {formatCurrency(yearExpected)} expected
+                {sessionLabel} (1 Apr {sessionStartYear} – 31 Mar {sessionStartYear + 1}):{" "}
+                {formatCurrency(yearCollected)} collected of {formatCurrency(yearExpected)} expected
               </CardDescription>
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label>Year</Label>
+              <Label>Session start year</Label>
               <Input
                 type="number"
-                value={year}
-                onChange={(e) => setYear(+e.target.value || year)}
-                className="w-24"
+                value={sessionStartYear}
+                onChange={(e) => setSessionStartYear(+e.target.value || sessionStartYear)}
+                className="w-28"
               />
             </div>
           </div>
@@ -709,7 +720,7 @@ export function FeeReportsPanel({ settings, students, activeSchoolId }) {
               const max = Math.max(...trend.map((t) => t.expected), 1);
               const h = Math.round((m.collected / max) * 100);
               return (
-                <div key={m.month} className="text-center" title={`${m.label}: ${formatCurrency(m.collected)}`}>
+                <div key={`${m.year}-${m.month}`} className="text-center" title={`${m.label} ${m.year}: ${formatCurrency(m.collected)}`}>
                   <div className="h-24 flex items-end justify-center">
                     <div
                       style={{ height: `${Math.max(h, m.collected ? 4 : 0)}%` }}

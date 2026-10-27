@@ -46,7 +46,7 @@ function FieldWrap({ label, htmlFor, required, children, className }) {
 const STAFF_FORM_TABS = ["Personal", "Employment", "Qualifications", "Banking", "System"];
 
 function staffFieldsForFormTab(tab) {
-  const personalFields = ["name", "fname", "cnic", "dob", "domicile", "contact", "email", "address", "emergencyContact"];
+  const personalFields = ["name", "fname", "cnic", "dob", "contact", "email"];
   const employmentFields = ["staffCategory", "cpn", "designation", "bps", "doe", "dprs", "dppp", "daps"];
   const qualFields = ["aq", "subj", "pq"];
   const bankingFields = ["bankName", "accNo", "iban", "bankCode", "branch"];
@@ -116,17 +116,14 @@ export const STAFF_PROFILE_FIELDS = [
 
 // Table header labels; form keeps STAFF_PROFILE_FIELDS labels
 export const STAFF_PROFILE_TABLE_HEADERS = [
-  // Personal Information
+  // Personal Information (no domicile / address / emergency contact in directory table)
   { id: "photo", label: "Photo" },
   { id: "name", label: "Full Name" },
   { id: "fname", label: "Father's Name" },
   { id: "cnic", label: "CNIC" },
   { id: "dob", label: "DOB" },
-  { id: "domicile", label: "Domicile" },
   { id: "contact", label: "Contact Number" },
   { id: "email", label: "Email Address" },
-  { id: "address", label: "Address" },
-  { id: "emergencyContact", label: "Emergency Contact" },
   // Employment & Service Details
   { id: "cpn", label: "Personal#" },
   { id: "staffCategory", label: "Category" },
@@ -152,7 +149,7 @@ export const STAFF_PROFILE_TABLE_HEADERS = [
 ];
 
 export const STAFF_TABLE_GROUPS = [
-  { title: "Personal Information", short: "Personal", count: 10, fields: ["photo", "name", "fname", "cnic", "dob", "domicile", "contact", "email", "address", "emergencyContact"] },
+  { title: "Personal Information", short: "Personal", count: 7, fields: ["photo", "name", "fname", "cnic", "dob", "contact", "email"] },
   { title: "Employment & Service Details", short: "Employment", count: 8, fields: ["cpn", "staffCategory", "designation", "bps", "doe", "dprs", "dppp", "daps"] },
   { title: "Qualifications", short: "Qualifications", count: 3, fields: ["aq", "subj", "pq"] },
   { title: "Banking & Financial Information", short: "Banking", count: 5, fields: ["bankName", "accNo", "iban", "bankCode", "branch"] },
@@ -536,7 +533,38 @@ export function StaffProfilesPage({ settings = {}, schools = [], staffProfiles, 
     if (h.id === "photo" || h.id === "name") return true;
     return activeGroup.fields.includes(h.id);
   });
-  const nowrapFields = new Set(["cnic", "dob", "contact", "email", "emergencyContact"]);
+  const centerCols = new Set([
+    "photo", "cnic", "dob", "contact", "bps", "cpn", "staffCategory",
+    "doe", "dprs", "dppp", "daps", "employeeStatus", "bankCode",
+  ]);
+  /** Min widths only — no max/truncate so every value stays fully readable. */
+  const colWidthClass = {
+    photo: "w-14 min-w-14",
+    name: "min-w-[140px]",
+    fname: "min-w-[140px]",
+    cnic: "min-w-[148px]",
+    dob: "min-w-[104px]",
+    contact: "min-w-[128px]",
+    email: "min-w-[200px]",
+    cpn: "min-w-[96px]",
+    staffCategory: "min-w-[110px]",
+    designation: "min-w-[140px]",
+    bps: "min-w-[64px]",
+    doe: "min-w-[120px]",
+    dprs: "min-w-[120px]",
+    dppp: "min-w-[120px]",
+    daps: "min-w-[120px]",
+    aq: "min-w-[140px]",
+    subj: "min-w-[120px]",
+    pq: "min-w-[140px]",
+    bankName: "min-w-[120px]",
+    accNo: "min-w-[140px]",
+    iban: "min-w-[200px]",
+    bankCode: "min-w-[96px]",
+    branch: "min-w-[140px]",
+    employeeStatus: "min-w-[96px]",
+    department: "min-w-[120px]",
+  };
 
   const buildExportRows = () => {
     const headers = STAFF_PROFILE_TABLE_HEADERS.map((h) => h.label);
@@ -674,49 +702,59 @@ export function StaffProfilesPage({ settings = {}, schools = [], staffProfiles, 
             </div>
           ) : (
             <div className="overflow-x-auto rounded-lg border">
-              <Table>
+              <Table className="w-max min-w-full">
                 <TableHeader>
                   <TableRow className="bg-muted/50 hover:bg-muted/50">
                     {visibleHeaders.map((h) => (
-                      <TableHead key={h.id} className="whitespace-nowrap font-semibold">
+                      <TableHead
+                        key={h.id}
+                        className={cn(
+                          "whitespace-nowrap font-semibold align-middle px-3",
+                          colWidthClass[h.id],
+                          centerCols.has(h.id) || h.id === "photo" ? "text-center" : "text-left",
+                        )}
+                      >
                         {h.label}
                       </TableHead>
                     ))}
-                    <TableHead className="whitespace-nowrap text-center font-semibold">Actions</TableHead>
+                    <TableHead className="sticky right-0 z-20 whitespace-nowrap text-center font-semibold align-middle min-w-[210px] w-[210px] px-3 bg-muted/50 border-l border-border shadow-[-6px_0_8px_-6px_rgba(0,0,0,0.08)]">
+                      Actions
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {activeRows.map((p, i) => (
-                    <TableRow key={p.id != null ? p.id : `row-${i}`}>
+                    <TableRow key={p.id != null ? p.id : `row-${i}`} className="group">
                       {visibleHeaders.map((h) => {
                         const value = cellVal(p, h.id);
                         return (
                           <TableCell
                             key={h.id}
                             className={cn(
-                              "align-middle",
+                              "align-middle px-3 whitespace-nowrap",
+                              colWidthClass[h.id],
+                              centerCols.has(h.id) ? "text-center" : "text-left",
                               h.id === "name" && "font-semibold text-primary",
-                              nowrapFields.has(h.id) && "whitespace-nowrap",
-                              h.id === "address" && "max-w-[220px] whitespace-normal",
                             )}
-                            title={nowrapFields.has(h.id) || h.id === "address" ? String(value) : undefined}
                           >
                             {h.id === "photo" ? (
-                              <Avatar size="sm">
-                                {p.photo && typeof p.photo === "string" ? (
-                                  <AvatarImage src={p.photo} alt="" style={{ objectPosition: p.photoPosition || "50% 50%" }} />
-                                ) : null}
-                                <AvatarFallback>
-                                  {p.name && typeof p.name === "string" ? p.name.charAt(0).toUpperCase() : "?"}
-                                </AvatarFallback>
-                              </Avatar>
+                              <div className="flex justify-center">
+                                <Avatar size="sm">
+                                  {p.photo && typeof p.photo === "string" ? (
+                                    <AvatarImage src={p.photo} alt="" style={{ objectPosition: p.photoPosition || "50% 50%" }} />
+                                  ) : null}
+                                  <AvatarFallback>
+                                    {p.name && typeof p.name === "string" ? p.name.charAt(0).toUpperCase() : "?"}
+                                  </AvatarFallback>
+                                </Avatar>
+                              </div>
                             ) : (
                               value
                             )}
                           </TableCell>
                         );
                       })}
-                      <TableCell className="align-middle">
+                      <TableCell className="sticky right-0 z-10 align-middle text-center min-w-[210px] w-[210px] px-3 bg-background group-hover:bg-muted/30 border-l border-border shadow-[-6px_0_8px_-6px_rgba(0,0,0,0.08)]">
                         <div className="flex flex-nowrap items-center justify-center gap-1">
                           <Button type="button" variant="outline" size="icon-sm" onClick={() => handleOpenForm(p)} title="Edit">
                             <Edit2 className="size-3.5" />

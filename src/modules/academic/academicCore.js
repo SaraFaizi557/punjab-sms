@@ -236,7 +236,13 @@ export function normalizeSessionList(sessions, currentSession) {
 
 export function validateSessionLabel(value) {
   const session = String(value || '').trim()
-  if (!/^\d{4}-\d{4}$/.test(session)) return { ok: false, session: '', error: 'Use format YYYY-YYYY (e.g. 2025-2026).' }
+  if (!/^\d{4}-\d{4}$/.test(session)) {
+    return {
+      ok: false,
+      session: '',
+      error: 'Use format YYYY-YYYY for 1 Apr–31 Mar (e.g. 2025-2026 = Apr 2025 to Mar 2026).',
+    }
+  }
   return { ok: true, session, error: null }
 }
 

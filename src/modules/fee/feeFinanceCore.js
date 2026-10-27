@@ -12,6 +12,11 @@ import {
   resolveMonthlyTuition,
   PUBLIC_FEE_AMOUNT,
 } from '@/shared/schoolCategory.js'
+import {
+  academicSession,
+  academicYearMonths,
+  sessionDateRange,
+} from '@/modules/systemSettings/systemSettingsCore.js'
 
 export const FEE_FINANCE_TABS = [
   { id: 'overview', l: 'Overview' },
@@ -286,25 +291,36 @@ export function summarizeFeeFinance({
   }
 }
 
-export function buildYearlyFeeTrend(feeRecords, { year, students, classes, feeAmount = FEE_AMOUNT, settings, resolveAmount }) {
+/**
+ * Fee trend for one education session (1 Apr → 31 Mar).
+ * `session` e.g. "2025-2026"; if omitted, uses current academic session.
+ * Legacy `year` (start year) still accepted when session is missing.
+ */
+export function buildYearlyFeeTrend(feeRecords, { year, session, students, classes, feeAmount = FEE_AMOUNT, settings, resolveAmount }) {
   const resolve =
     typeof resolveAmount === 'function'
       ? resolveAmount
       : settings
         ? makeTuitionResolver(settings, classes)
         : () => feeAmount
-  return getMonthsList().map((m) => {
-    const summary = getClassFeeSummary(feeRecords, classes, m.value, year, students, resolve)
+  const sessionLabel =
+    session ||
+    (Number.isFinite(year) ? `${year}-${year + 1}` : academicSession())
+  return academicYearMonths(sessionLabel).map((m) => {
+    const summary = getClassFeeSummary(feeRecords, classes, m.month, m.year, students, resolve)
     const collected = summary.reduce((s, c) => s + c.collectedAmount, 0)
     const expected = summary.reduce((s, c) => s + c.expectedAmount, 0)
     return {
-      month: m.value,
-      label: m.label.slice(0, 3),
+      month: m.month,
+      year: m.year,
+      label: m.shortLabel,
       collected: Math.round(collected),
       expected: Math.round(expected),
     }
   })
 }
+
+export { academicSession, academicYearMonths, sessionDateRange }
 
 export function expenseTotalsByCategory(expenses, { month, year } = {}) {
   const map = {}

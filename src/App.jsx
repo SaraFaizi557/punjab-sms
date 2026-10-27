@@ -53,7 +53,7 @@ import {
   getClassSubjects, isTeachingStaffMember, teachingStaffList, normalizeRollNo,
   findStudentByAdmissionNo, getRollNumberScopeClassIds, findStudentByRollInClass,
   maxNumericFromAdmissionStrings, nextAdmissionNo, maxRollInClass, nextRollNoForClass,
-  stripDuplicateAdmissionsForImport, dedupeStudentsByIdentity, fmtMin, academicSession,
+  stripDuplicateAdmissionsForImport, dedupeStudentsByIdentity, fmtMin, academicSession, defaultSession as defaultSessionFromCore,
   calcTimes, getTT, setTT, setTTSingleDay, parseABVariantSubject, isABCounterpartSubject,
   getPeriodLabel, timetablePdfPeriodCell, getClassesByPortion, getStaffInPortion,
   isPortionMaskFull, formatPortionMaskLabel, getClassesByPortionMask, getStaffInPortionMask,
@@ -382,8 +382,7 @@ function loadFromLocal(){
     const data=JSON.parse(raw);
     if(!data||!Array.isArray(data.schools)||data.schools.length===0) return null;
     const defaultDs=()=>({dates:[],cols:[],subs:{},note:""});
-    const y=new Date().getFullYear(), mo=new Date().getMonth();
-    const defSession=mo>=6 ? (y + "-" + (y+1)) : ((y-1) + "-" + y);
+    const defSession = defaultSessionFromCore();
     const schools=data.schools.map(s=>{
       const hasBySession=s.exam_by_session&&typeof s.exam_by_session==="object"&&Object.keys(s.exam_by_session).length>0;
       const curSession=s.currentSession||defSession;
@@ -1557,10 +1556,9 @@ function AdminPage({ schools, setSchools, setSchoolStatus, onSignOut, onResetAll
 
 // ─── APP ROOT ─────────────────────────────────────────────────────────────────
 const defaultExamDatesheet=()=>({dates:[],cols:[],subs:{},note:""});
+/** Education year: 1 April – 31 March (see systemSettingsCore.academicSession). */
 function defaultSession(){
-  const y=new Date().getFullYear();
-  const m=new Date().getMonth();
-  return m>=6 ? (y + "-" + (y+1)) : ((y-1) + "-" + y);
+  return defaultSessionFromCore();
 }
 function schoolShape(id,name){
   const session=defaultSession();
@@ -2200,6 +2198,7 @@ function App(){
               students={students}
               activeSchoolId={activeSchoolId}
               setBarSubtitle={setBarSubtitle}
+              currentSession={curSession}
             />
           )}
           {page==="examination"&&<ExaminationErrorBoundary><ExaminationPage settings={effectiveSettings} setSettings={setSettingsForActive} students={students} setStudents={setStudentsForActive} timetable={timetable} exam_tm={exam_tm} exam_om={exam_om} setExamMarks={setExamMarksForActive} exam_datesheet={exam_datesheet} setDatesheet={setDatesheetForActive} currentSession={curSession} currentUser={currentUser} activeSchoolId={activeSchoolId} setBarSubtitle={setBarSubtitle}/></ExaminationErrorBoundary>}

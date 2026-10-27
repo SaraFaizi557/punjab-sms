@@ -645,13 +645,15 @@ export function fmtMin(m){
   const sfx=h>=12?"PM":"AM", hh=h>12?h-12:h===0?12:h;
   return `${hh}:${String(mm).padStart(2,"0")} ${sfx}`;
 }
-export function academicSession(d=new Date()){
-  const y=d.getFullYear();
-  const m=d.getMonth(); // 0-indexed
-  // Session changes in April: e.g. Apr 2025 -> 2025-2026, Jan 2025 -> 2024-2025
-  if(m>=3) return `${y}-${y+1}`;
-  return `${y-1}-${y}`;
-}
+/** Education session 1 Apr – 31 Mar (single source: systemSettingsCore). */
+export {
+  academicSession,
+  defaultSession,
+  parseSessionYears,
+  sessionDateRange,
+  formatSessionValidity,
+  academicYearMonths,
+} from "@/modules/systemSettings/systemSettingsCore.js";
 
 export function calcTimes(settings, day){
   const isFri=day==="Friday", isSat=day==="Saturday";
