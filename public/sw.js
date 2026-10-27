@@ -1,8 +1,13 @@
-const CACHE_VERSION = "psms-cache-v4";
+/* Punjab-SMS service worker — network-first shell + versioned PWA icons. */
+const ASSET_REV = "20261027-emblem";
+const CACHE_VERSION = `psms-cache-${ASSET_REV}`;
 
-/** Directory URL where this script lives (e.g. `https://host/` or `https://host/psms/`). */
 function appRootUrl() {
   return new URL(".", self.location).href;
+}
+
+function versioned(fileName) {
+  return new URL(`${fileName}?v=${encodeURIComponent(ASSET_REV)}`, appRootUrl()).href;
 }
 
 function appShellUrls() {
@@ -10,12 +15,13 @@ function appShellUrls() {
   return {
     root,
     index: new URL("index.html", root).href,
-    manifest: new URL("manifest.webmanifest", root).href,
-    favicon: new URL("favicon.png", root).href,
-    icon192: new URL("pwa-icon-192.png", root).href,
-    icon512: new URL("pwa-icon-512.png", root).href,
-    iconMaskable: new URL("pwa-icon-512-maskable.png", root).href,
-    apple: new URL("apple-touch-icon.png", root).href,
+    manifest: versioned("manifest.webmanifest"),
+    favicon: versioned("favicon.png"),
+    icon192: versioned("pwa-icon-192.png"),
+    icon512: versioned("pwa-icon-512.png"),
+    iconMaskable: versioned("pwa-icon-512-maskable.png"),
+    apple: versioned("apple-touch-icon.png"),
+    brand: versioned("app-brand-logo.png"),
   };
 }
 
@@ -25,9 +31,23 @@ function isHtmlNavigation(request) {
   return typeof accept === "string" && accept.includes("text/html");
 }
 
-self.addEventListener("install", (event) => {
+function isVersionedAsset(pathname) {
+  return (
+    pathname.endsWith("/manifest.webmanifest") ||
+    pathname.endsWith("/favicon.png") ||
+    pathname.endsWith("/favicon.svg") ||
+    pathname.endsWith("/apple-touch-icon.png") ||
+    pathname.endsWith("/app-brand-logo.png") ||
+    pathname.endsWith("/app-brand.png") ||
+    /\/pwa-icon-\d+/.test(pathname) ||
+    pathname.endsWith("/pwa-ico.png") ||
+    pathname.endsWith("/pwa-asset-rev.json")
+  );
+}
+
+async function precacheIcons(cache) {
   const urls = appShellUrls();
-  const shell = [
+  const list = [
     urls.root,
     urls.index,
     urls.manifest,
@@ -36,11 +56,25 @@ self.addEventListener("install", (event) => {
     urls.icon512,
     urls.iconMaskable,
     urls.apple,
+    urls.brand,
   ];
+  await Promise.all(
+    list.map(async (url) => {
+      try {
+        const res = await fetch(url, { cache: "reload" });
+        if (res && res.ok) await cache.put(url, res.clone());
+      } catch {
+        /* offline install — ignore */
+      }
+    }),
+  );
+}
+
+self.addEventListener("install", (event) => {
   event.waitUntil(
     caches
       .open(CACHE_VERSION)
-      .then((cache) => cache.addAll(shell))
+      .then((cache) => precacheIcons(cache))
       .catch(() => undefined),
   );
   self.skipWaiting();
@@ -48,16 +82,31 @@ self.addEventListener("install", (event) => {
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches
-      .keys()
-      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE_VERSION).map((k) => caches.delete(k))))
-      .then(() => self.clients.claim()),
+    (async () => {
+      const keys = await caches.keys();
+      await Promise.all(keys.filter((k) => k !== CACHE_VERSION).map((k) => caches.delete(k)));
+      // Warm the new icon set so launchers/clients see the updated mark ASAP.
+      try {
+        const cache = await caches.open(CACHE_VERSION);
+        await precacheIcons(cache);
+      } catch {
+        /* ignore */
+      }
+      await self.clients.claim();
+      const clients = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+      for (const client of clients) {
+        client.postMessage({ type: "PSMS_ASSETS_UPDATED", rev: ASSET_REV });
+      }
+    })(),
   );
 });
 
 self.addEventListener("message", (event) => {
   if (event.data && event.data.type === "SKIP_WAITING") {
     self.skipWaiting();
+  }
+  if (event.data && event.data.type === "GET_ASSET_REV") {
+    event.source?.postMessage?.({ type: "PSMS_ASSET_REV", rev: ASSET_REV });
   }
 });
 
@@ -68,13 +117,11 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
   const path = url.pathname;
 
-  // Never cache the service worker itself
   if (path.endsWith("/sw.js") || path === "/sw.js") {
-    event.respondWith(fetch(event.request));
+    event.respondWith(fetch(event.request, { cache: "no-store" }));
     return;
   }
 
-  // Network-first for HTML: ensures new deploys load fresh index.html (new Vite chunk URLs).
   if (isHtmlNavigation(event.request)) {
     event.respondWith(
       fetch(event.request)
@@ -88,7 +135,6 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Vite fingerprinted assets: cache-first is safe (each build uses new URLs).
   if (path.includes("/assets/")) {
     event.respondWith(
       caches.match(event.request).then((cached) => {
@@ -103,7 +149,24 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Manifest, icons, config: prefer network so updates propagate; cache as offline fallback.
+  // Manifest + icons: always try network first (bypass HTTP cache) so every device gets new art.
+  if (isVersionedAsset(path)) {
+    event.respondWith(
+      fetch(event.request, { cache: "no-store" })
+        .then((networkRes) => {
+          if (!networkRes || !networkRes.ok) return networkRes;
+          const copy = networkRes.clone();
+          caches.open(CACHE_VERSION).then((cache) => {
+            cache.put(event.request, copy);
+            // Also store under the versioned shell key when paths match.
+          }).catch(() => undefined);
+          return networkRes;
+        })
+        .catch(() => caches.match(event.request)),
+    );
+    return;
+  }
+
   event.respondWith(
     fetch(event.request)
       .then((networkRes) => {

@@ -1,9 +1,12 @@
 """Generate transparent Punjab-SMS app icons from the Digital Education Emblem."""
 from __future__ import annotations
 
+import json
+import re
+from datetime import datetime, timezone
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageFilter
+from PIL import Image, ImageFilter
 
 SRC = Path(
     r"C:\Users\MOHID\.cursor\projects\d-FAIZI-PROJECTS-JavaScript-punjab-sms"
@@ -144,6 +147,73 @@ def write_favicon_svg(master: Image.Image, dest: Path) -> None:
     dest.write_text(svg, encoding="utf-8")
 
 
+def bump_asset_rev() -> str:
+    """New rev so installed PWAs treat icon URLs as changed and refetch."""
+    rev = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M")
+    payload = (
+        json.dumps(
+            {
+                "rev": rev,
+                "note": "Bump rev whenever PWA/app icons change so installed clients fetch new URLs.",
+            },
+            indent=2,
+        )
+        + "\n"
+    )
+    (OUT_DIR / "pwa-asset-rev.json").write_text(payload, encoding="utf-8")
+    (ROOT / "src" / "pwa-asset-rev.json").write_text(payload, encoding="utf-8")
+
+    sw = OUT_DIR / "sw.js"
+    if sw.exists():
+        text = sw.read_text(encoding="utf-8")
+        text = re.sub(
+            r'const ASSET_REV = "[^"]*";',
+            f'const ASSET_REV = "{rev}";',
+            text,
+            count=1,
+        )
+        sw.write_text(text, encoding="utf-8")
+
+    manifest = OUT_DIR / "manifest.webmanifest"
+    if manifest.exists():
+        data = json.loads(manifest.read_text(encoding="utf-8"))
+
+        def stamp(src: str) -> str:
+            path = str(src).split("?", 1)[0]
+            return f"{path}?v={rev}"
+
+        for icon in data.get("icons") or []:
+            if isinstance(icon, dict) and "src" in icon:
+                icon["src"] = stamp(icon["src"])
+        for shortcut in data.get("shortcuts") or []:
+            for icon in shortcut.get("icons") or []:
+                if isinstance(icon, dict) and "src" in icon:
+                    icon["src"] = stamp(icon["src"])
+        manifest.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+
+    index = ROOT / "index.html"
+    if index.exists():
+        html = index.read_text(encoding="utf-8")
+        for name in (
+            "favicon.png",
+            "favicon.svg",
+            "apple-touch-icon.png",
+            "pwa-icon-192.png",
+            "pwa-icon-512.png",
+            "manifest.webmanifest",
+            "app-brand-logo.png",
+        ):
+            html = re.sub(
+                rf'((?:href|src)="/{re.escape(name)})(?:\?v=[^"]*)?(")',
+                rf"\1?v={rev}\2",
+                html,
+            )
+        index.write_text(html, encoding="utf-8")
+
+    print(f"bumped PWA asset rev → {rev}")
+    return rev
+
+
 def main() -> None:
     if not SRC.exists():
         raise SystemExit(f"source missing: {SRC}")
@@ -179,6 +249,7 @@ def main() -> None:
 
     write_favicon_svg(square, OUT_DIR / "favicon.svg")
     print("wrote favicon.svg")
+    bump_asset_rev()
 
 
 if __name__ == "__main__":

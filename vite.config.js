@@ -61,23 +61,60 @@ function patchHtmlPublicLinks(base) {
   return {
     name: "psms-html-public-links",
     transformIndexHtml(html) {
-      if (base === "/") return html;
-      return html
-        .replaceAll('href="/favicon.png"', `href="${base}favicon.png"`)
-        .replaceAll('href="/favicon.svg"', `href="${base}favicon.svg"`)
-        .replaceAll('href="/apple-touch-icon.png"', `href="${base}apple-touch-icon.png"`)
-        .replaceAll('href="/manifest.webmanifest"', `href="${base}manifest.webmanifest"`)
-        .replaceAll('href="/pwa-icon-192.png"', `href="${base}pwa-icon-192.png"`)
-        .replaceAll('href="/pwa-icon-512.png"', `href="${base}pwa-icon-512.png"`);
+      const rev = readPwaAssetRev();
+      // Always stamp cache-bust query on icon/manifest links (dev + build).
+      let next = html;
+      for (const name of [
+        "favicon.png",
+        "favicon.svg",
+        "apple-touch-icon.png",
+        "pwa-icon-192.png",
+        "pwa-icon-512.png",
+        "manifest.webmanifest",
+        "app-brand-logo.png",
+      ]) {
+        const re = new RegExp(`((?:href|src)="/${name.replace(".", "\\.")})(?:\\?v=[^"]*)?(")`, "g");
+        next = next.replace(re, `$1?v=${encodeURIComponent(rev)}$2`);
+      }
+      if (base === "/") return next;
+      return next
+        .replaceAll(`href="/favicon.png?v=${rev}"`, `href="${base}favicon.png?v=${rev}"`)
+        .replaceAll(`href="/favicon.svg?v=${rev}"`, `href="${base}favicon.svg?v=${rev}"`)
+        .replaceAll(`href="/apple-touch-icon.png?v=${rev}"`, `href="${base}apple-touch-icon.png?v=${rev}"`)
+        .replaceAll(`href="/manifest.webmanifest?v=${rev}"`, `href="${base}manifest.webmanifest?v=${rev}"`)
+        .replaceAll(`href="/pwa-icon-192.png?v=${rev}"`, `href="${base}pwa-icon-192.png?v=${rev}"`)
+        .replaceAll(`href="/pwa-icon-512.png?v=${rev}"`, `href="${base}pwa-icon-512.png?v=${rev}"`)
+        .replaceAll(`src="/app-brand-logo.png?v=${rev}"`, `src="${base}app-brand-logo.png?v=${rev}"`);
     },
   };
 }
 
-/** Align PWA manifest with `base` after files are copied to `dist/`. */
+function readPwaAssetRev() {
+  for (const rel of ["public/pwa-asset-rev.json", "src/pwa-asset-rev.json"]) {
+    const file = path.resolve(rel);
+    try {
+      if (!fs.existsSync(file)) continue;
+      const data = JSON.parse(fs.readFileSync(file, "utf8"));
+      return String(data.rev || "1");
+    } catch {
+      /* try next */
+    }
+  }
+  return "1";
+}
+
+function withAssetRev(src, rev) {
+  if (typeof src !== "string" || !src) return src;
+  const [pathPart] = src.split("?");
+  return `${pathPart}?v=${encodeURIComponent(rev)}`;
+}
+
+/** Align PWA manifest with `base` + stamp icon cache-bust rev after copy to `dist/`. */
 function patchManifestScope(base) {
   return {
     name: "psms-manifest-scope",
     closeBundle() {
+      const rev = readPwaAssetRev();
       const file = path.resolve("dist/manifest.webmanifest");
       if (!fs.existsSync(file)) return;
       const data = JSON.parse(fs.readFileSync(file, "utf8"));
@@ -86,8 +123,13 @@ function patchManifestScope(base) {
       data.id = base;
       const root = base === "/" ? "" : base.replace(/\/$/, "");
       const prefixSrc = (src) => {
-        if (typeof src !== "string" || !src.startsWith("/") || (root && src.startsWith(root + "/"))) return src;
-        return `${root}${src}`;
+        if (typeof src !== "string" || !src.startsWith("/")) return src;
+        const stamped = withAssetRev(src, rev);
+        const q = stamped.indexOf("?");
+        const pathPart = q >= 0 ? stamped.slice(0, q) : stamped;
+        const query = q >= 0 ? stamped.slice(q) : "";
+        if (root && pathPart.startsWith(`${root}/`)) return stamped;
+        return `${root}${pathPart}${query}`;
       };
       if (Array.isArray(data.icons)) {
         data.icons = data.icons.map((icon) => ({ ...icon, src: prefixSrc(icon.src) }));
@@ -104,6 +146,17 @@ function patchManifestScope(base) {
         }));
       }
       fs.writeFileSync(file, JSON.stringify(data, null, 2));
+
+      // Keep ASSET_REV in the shipped service worker in sync with pwa-asset-rev.json
+      const swFile = path.resolve("dist/sw.js");
+      if (fs.existsSync(swFile)) {
+        let sw = fs.readFileSync(swFile, "utf8");
+        sw = sw.replace(
+          /const ASSET_REV = "[^"]*";/,
+          `const ASSET_REV = ${JSON.stringify(rev)};`,
+        );
+        fs.writeFileSync(swFile, sw);
+      }
     },
   };
 }

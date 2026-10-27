@@ -42,10 +42,18 @@ function registerServiceWorker() {
       return;
     }
 
+    // New SW (new ASSET_REV / icons) claims → reload so every device loads the
+    // versioned manifest + icon URLs Chrome/Android use for the home-screen mark.
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      if (refreshing) return;
+      refreshing = true;
+      window.location.reload();
+    });
+
     navigator.serviceWorker
       .register(swUrl, { scope: withSlash, updateViaCache: "none" })
       .then((reg) => {
-        // Check for updates when tab regains focus
         const check = () => {
           try {
             void reg.update();
@@ -56,16 +64,22 @@ function registerServiceWorker() {
         document.addEventListener("visibilitychange", () => {
           if (document.visibilityState === "visible") check();
         });
-        // Activate waiting worker ASAP
-        if (reg.waiting) {
-          reg.waiting.postMessage({ type: "SKIP_WAITING" });
-        }
+        window.addEventListener("online", check);
+        // Idle / background PWAs still discover icon + shell updates.
+        window.setInterval(check, 30 * 60 * 1000);
+        check();
+
+        const activateWaiting = (worker) => {
+          if (!worker) return;
+          worker.postMessage({ type: "SKIP_WAITING" });
+        };
+        if (reg.waiting) activateWaiting(reg.waiting);
         reg.addEventListener("updatefound", () => {
           const worker = reg.installing;
           if (!worker) return;
           worker.addEventListener("statechange", () => {
             if (worker.state === "installed" && navigator.serviceWorker.controller) {
-              worker.postMessage({ type: "SKIP_WAITING" });
+              activateWaiting(worker);
             }
           });
         });

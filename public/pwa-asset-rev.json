@@ -1,0 +1,4 @@
+{
+  "rev": "20261027-emblem",
+  "note": "Bump rev whenever PWA/app icons change so installed clients fetch new URLs."
+}

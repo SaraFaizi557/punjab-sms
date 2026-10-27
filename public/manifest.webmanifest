@@ -16,25 +16,25 @@
   "prefer_related_applications": false,
   "icons": [
     {
-      "src": "/pwa-icon-192.png",
+      "src": "/pwa-icon-192.png?v=20261027-emblem",
       "type": "image/png",
       "sizes": "192x192",
       "purpose": "any"
     },
     {
-      "src": "/pwa-icon-512.png",
+      "src": "/pwa-icon-512.png?v=20261027-emblem",
       "type": "image/png",
       "sizes": "512x512",
       "purpose": "any"
     },
     {
-      "src": "/pwa-icon-512-maskable.png",
+      "src": "/pwa-icon-512-maskable.png?v=20261027-emblem",
       "type": "image/png",
       "sizes": "512x512",
       "purpose": "maskable"
     },
     {
-      "src": "/apple-touch-icon.png",
+      "src": "/apple-touch-icon.png?v=20261027-emblem",
       "type": "image/png",
       "sizes": "180x180",
       "purpose": "any"
@@ -45,13 +45,13 @@
       "name": "Admit Student",
       "short_name": "Admit",
       "url": "/?nav=students&tab=admission",
-      "icons": [{ "src": "/pwa-icon-192.png", "sizes": "192x192" }]
+      "icons": [{ "src": "/pwa-icon-192.png?v=20261027-emblem", "sizes": "192x192" }]
     },
     {
       "name": "Dashboard",
       "short_name": "Home",
       "url": "/?nav=dashboard",
-      "icons": [{ "src": "/pwa-icon-192.png", "sizes": "192x192" }]
+      "icons": [{ "src": "/pwa-icon-192.png?v=20261027-emblem", "sizes": "192x192" }]
     }
   ]
 }
