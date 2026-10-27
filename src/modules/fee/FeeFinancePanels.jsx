@@ -30,6 +30,7 @@ import {
   CONCESSION_TYPES,
   EXPENSE_CATEGORIES,
 } from "./feeFinanceCore.js";
+import { isPrivateSchool, schoolSectorLabel, ensureFeeStructure } from "@/shared/schoolCategory.js";
 
 const { formatClassDisplay } = H;
 
@@ -80,14 +81,24 @@ export function FeeOverviewPanel({ settings, students, activeSchoolId, onGoTab }
         expenses,
         concessions,
         feeAmount,
+        settings,
       }),
-    [feeRecords, students, settings.classes, period, expenses, concessions, feeAmount],
+    [feeRecords, students, settings, period, expenses, concessions, feeAmount],
   );
 
   const monthValue = `${period.year}-${String(period.month).padStart(2, "0")}`;
+  const privateSchool = isPrivateSchool(settings);
 
   const cards = [
-    { label: "Expected", value: formatCurrency(summary.expected), hint: `${summary.totalStudents} students × ${feeAmount}`, tab: "collection", accentClass: "border-t-primary" },
+    {
+      label: "Expected",
+      value: formatCurrency(summary.expected),
+      hint: privateSchool
+        ? `${summary.totalStudents} students · class-wise tuition`
+        : `${summary.totalStudents} students × ${feeAmount}`,
+      tab: "collection",
+      accentClass: "border-t-primary",
+    },
     { label: "Collected", value: formatCurrency(summary.collected), hint: `${summary.rate}% · ${summary.paidCount} paid`, tab: "receipts", accentClass: "border-t-primary" },
     { label: "Outstanding dues", value: formatCurrency(summary.pending), hint: `${summary.duesCount} students`, tab: "dues", accentClass: "border-t-red-700" },
     { label: "Expenses (month)", value: formatCurrency(summary.expenseTotal), hint: `Net ${formatCurrency(summary.net)}`, tab: "expenses", accentClass: "border-t-amber-600" },
@@ -100,7 +111,11 @@ export function FeeOverviewPanel({ settings, students, activeSchoolId, onGoTab }
           <div>
             <CardTitle className="text-base">Fee & Finance Overview</CardTitle>
             <CardDescription className="mt-1">
-              Monthly fee {formatCurrency(feeAmount)} per student · {summary.concessionCount} concessions active
+              {schoolSectorLabel(settings)} school ·{" "}
+              {privateSchool
+                ? `default tuition ${formatCurrency(feeAmount)}`
+                : `flat fee ${formatCurrency(feeAmount)}`}{" "}
+              · {summary.concessionCount} concessions active
             </CardDescription>
           </div>
           <div className="flex flex-col gap-1.5">
@@ -141,6 +156,11 @@ export function FeeOverviewPanel({ settings, students, activeSchoolId, onGoTab }
         <Button size="sm" onClick={() => onGoTab?.("collection")}>Open Collection</Button>
         <Button size="sm" variant="outline" onClick={() => onGoTab?.("dues")}>View Dues</Button>
         <Button size="sm" variant="outline" onClick={() => onGoTab?.("receipts")}>Receipts</Button>
+        {privateSchool ? (
+          <Button size="sm" variant="outline" onClick={() => onGoTab?.("structure")}>
+            Fee structure
+          </Button>
+        ) : null}
         <Button size="sm" variant="outline" onClick={() => onGoTab?.("concessions")}>Concessions</Button>
         <Button size="sm" variant="outline" onClick={() => onGoTab?.("expenses")}>Expenses</Button>
         <Button size="sm" variant="outline" onClick={() => onGoTab?.("reports")}>Reports</Button>
@@ -169,10 +189,11 @@ export function FeeDuesPanel({ settings, students, activeSchoolId }) {
       year: period.year,
       concessions,
       feeAmount,
+      settings,
     });
     if (classId === "all") return all;
     return all.filter((d) => String(d.classId) === String(classId));
-  }, [feeRecords, students, settings.classes, period, concessions, feeAmount, classId]);
+  }, [feeRecords, students, settings, period, concessions, feeAmount, classId]);
 
   const totalDue = dues.reduce((s, d) => s + d.dueAmount, 0);
   const monthValue = `${period.year}-${String(period.month).padStart(2, "0")}`;
@@ -371,24 +392,42 @@ export function FeeConcessionsPanel({ settings, students, setSettings, activeSch
     <div className="flex flex-col gap-3.5">
       <Card className="shadow-none">
         <CardContent className="p-4">
-          <CardTitle className="mb-1">Fee structure & concessions</CardTitle>
+          <CardTitle className="mb-1">
+            {isPrivateSchool(settings) ? "Concessions" : "Fee structure & concessions"}
+          </CardTitle>
           <CardDescription className="mb-3">
-            Set the default monthly fee and grant discounts/waivers to individual students.
+            {isPrivateSchool(settings)
+              ? "Grant discounts/waivers on each student’s class tuition. Edit tuition under Fee structure."
+              : "Set the flat monthly fee (public/government model) and grant discounts/waivers."}
           </CardDescription>
-          <div className="flex flex-wrap gap-2.5 items-end mb-4">
-            <div className="flex flex-col gap-1.5">
-              <Label>Monthly fee (Rs)</Label>
-              <Input
-                type="number"
-                value={settings.feeAmount ?? feeAmount}
-                onChange={(e) =>
-                  setSettings?.((s) => ({ ...s, feeAmount: e.target.value === "" ? feeAmount : Number(e.target.value) }))
-                }
-                className="w-36"
-              />
+          {!isPrivateSchool(settings) ? (
+            <div className="flex flex-wrap gap-2.5 items-end mb-4">
+              <div className="flex flex-col gap-1.5">
+                <Label>Monthly fee (Rs)</Label>
+                <Input
+                  type="number"
+                  value={settings.feeAmount ?? feeAmount}
+                  onChange={(e) =>
+                    setSettings?.((s) => ({
+                      ...s,
+                      feeAmount: e.target.value === "" ? feeAmount : Number(e.target.value),
+                    }))
+                  }
+                  className="w-36"
+                />
+              </div>
+              <span className="text-xs text-muted-foreground pb-1.5">
+                Public/government flat fee for dues & collection.
+              </span>
             </div>
-            <span className="text-xs text-muted-foreground pb-1.5">Applies to dues calculations in this module.</span>
-          </div>
+          ) : (
+            <div className="mb-4 rounded-lg border border-border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
+              Private defaults — admission{" "}
+              {formatCurrency(ensureFeeStructure(settings).admissionFee)}, annual{" "}
+              {formatCurrency(ensureFeeStructure(settings).annualCharges)}, default tuition{" "}
+              {formatCurrency(feeAmount)}. Configure under <strong>Fee structure</strong>.
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-2.5 mb-3">
             <div className="flex flex-col gap-1.5">
               <Label>Search student</Label>
@@ -629,8 +668,15 @@ export function FeeReportsPanel({ settings, students, activeSchoolId }) {
   const expenses = loadExpenses(activeSchoolId);
   const feeAmount = getEffectiveFeeAmount(settings);
   const trend = useMemo(
-    () => buildYearlyFeeTrend(feeRecords, { year, students, classes: settings.classes, feeAmount }),
-    [feeRecords, year, students, settings.classes, feeAmount],
+    () =>
+      buildYearlyFeeTrend(feeRecords, {
+        year,
+        students,
+        classes: settings.classes,
+        feeAmount,
+        settings,
+      }),
+    [feeRecords, year, students, settings, feeAmount],
   );
   const byCat = expenseTotalsByCategory(expenses, { month: period.month, year: period.year });
   const monthValue = `${period.year}-${String(period.month).padStart(2, "0")}`;

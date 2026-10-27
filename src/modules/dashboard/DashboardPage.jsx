@@ -14,6 +14,7 @@ import {
   IdCard,
 } from "lucide-react";
 import * as feeCore from "@/modules/fee/feeCore";
+import { getEffectiveFeeAmount, makeTuitionResolver } from "@/modules/fee/feeFinanceCore.js";
 import { feeService, dashboardService } from "@/services";
 import { loadAttendanceFromLocal, hydrateAttendanceFromCloud } from "@/modules/attendance/AttendancePage";
 import { NativeSelect } from "@/components/ui/native-select";
@@ -133,15 +134,25 @@ export function DashboardPage({
   }, []);
 
   const feeStats = useMemo(() => {
-    return dashboardService.feeStats({
+    const resolveAmount = makeTuitionResolver(settings, settings.classes);
+    const summary = feeCore.getClassFeeSummary(
       feeRecords,
-      classes: settings.classes,
+      settings.classes || [],
+      currentMonth.month,
+      currentMonth.year,
       students,
-      month: currentMonth.month,
-      year: currentMonth.year,
-      feeAmount: feeCore.FEE_AMOUNT,
-    });
-  }, [feeRecords, settings.classes, students, currentMonth.month, currentMonth.year]);
+      resolveAmount,
+    );
+    const totalExpected = summary.reduce((s, c) => s + c.expectedAmount, 0);
+    const totalCollected = summary.reduce((s, c) => s + c.collectedAmount, 0);
+    const pct = totalExpected > 0 ? (totalCollected / totalExpected) * 100 : 0;
+    return {
+      totalExpected,
+      totalCollected,
+      totalPending: Math.max(0, totalExpected - totalCollected),
+      pct: Math.round(pct * 10) / 10,
+    };
+  }, [feeRecords, settings, students, currentMonth.month, currentMonth.year]);
 
   const attendanceToday = useMemo(
     () =>
@@ -275,8 +286,13 @@ export function DashboardPage({
       fail,
       pending,
       passRatePct,
-      feeCollected: classFeeRecords.reduce((sum, rec) => sum + (rec.amount || feeCore.FEE_AMOUNT), 0),
-      feeExpected: count * feeCore.FEE_AMOUNT,
+      feeCollected: classFeeRecords.reduce(
+        (sum, rec) => sum + (rec.amount || getEffectiveFeeAmount(settings)),
+        0,
+      ),
+      feeExpected: (students || [])
+        .filter((s) => resolveClass(settings.classes, s.classId)?.id === cls.id)
+        .reduce((sum, s) => sum + makeTuitionResolver(settings, settings.classes)(s), 0),
     };
   });
 

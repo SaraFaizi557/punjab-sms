@@ -9,6 +9,8 @@ import QRCode from "qrcode";
 import { X, Plus, Edit2, Trash2, Upload, Download, Menu, Settings, AlertTriangle, Eye, EyeOff } from "lucide-react";
 import * as feeCore from "@/modules/fee/feeCore";
 import { feeService, systemSettingsService, dashboardService } from "@/services";
+import { makeTuitionResolver } from "@/modules/fee/feeFinanceCore.js";
+import { isPrivateSchool, schoolSectorLabel } from "@/shared/schoolCategory.js";
 import signImg from "@/assets/sign.png";
 import { yieldToMain } from "@/yieldToMain.js";
 import { C, schoolOrBrandLogo, APP_BRAND_LOGO, genId } from "@/shared/theme";
@@ -46,13 +48,22 @@ const jsPDF =
 
 
 export function FeePage({ settings, students, activeSchoolId, setBarSubtitle }) {
+  const classes = useMemo(() => (settings.classes || []), [settings.classes]);
+  const resolveAmount = useMemo(
+    () => makeTuitionResolver(settings, classes),
+    [settings, classes],
+  );
+  const privateSchool = isPrivateSchool(settings);
+
   useEffect(() => {
     if (!setBarSubtitle) return;
-    setBarSubtitle(`${feeCore.FEE_AMOUNT} Rs per student per month`);
+    setBarSubtitle(
+      privateSchool
+        ? `${schoolSectorLabel(settings)} · class-wise tuition`
+        : `${feeService.effectiveAmount(settings)} Rs per student per month`,
+    );
     return () => setBarSubtitle("");
-  }, [setBarSubtitle]);
-
-  const classes = useMemo(() => (settings.classes || []), [settings.classes]);
+  }, [setBarSubtitle, privateSchool, settings]);
 
   const [feeRecords, setFeeRecords] = useState(() => {
     return feeService.load(activeSchoolId || "");
@@ -106,7 +117,15 @@ export function FeePage({ settings, students, activeSchoolId, setBarSubtitle }) 
       if (feeStatus.paid) {
         newRecords = feeService.remove(feeRecords, studentId, classId, selectedMonth.month, selectedMonth.year);
       } else {
-        newRecords = feeService.markStudent(feeRecords, { studentId, classId, month: selectedMonth.month, year: selectedMonth.year });
+        const student = (students || []).find((s) => String(s.id) === String(studentId));
+        const amount = resolveAmount(student || { classId });
+        newRecords = feeService.markStudent(feeRecords, {
+          studentId,
+          classId,
+          month: selectedMonth.month,
+          year: selectedMonth.year,
+          amount,
+        });
       }
       await saveFeeRecords(newRecords);
     } finally {
@@ -120,7 +139,14 @@ export function FeePage({ settings, students, activeSchoolId, setBarSubtitle }) 
     
     if (confirm(`Mark all ${classObj.totalStudents} students in ${classObj.className} as paid for ${getCurrentMonthName()} ${selectedMonth.year}?`)) {
       try {
-        const newRecords = feeService.markAll(feeRecords, { classId, month: selectedMonth.month, year: selectedMonth.year, students, classes });
+        const newRecords = feeService.markAll(feeRecords, {
+          classId,
+          month: selectedMonth.month,
+          year: selectedMonth.year,
+          students,
+          classes,
+          resolveAmount,
+        });
         await saveFeeRecords(newRecords);
       } catch {
         alert("Unable to update fee records. Please try again.");
@@ -129,8 +155,15 @@ export function FeePage({ settings, students, activeSchoolId, setBarSubtitle }) 
   };
 
   const monthlySummary = useMemo(() => {
-    return feeService.summary(feeRecords, classes, selectedMonth.month, selectedMonth.year, students);
-  }, [feeRecords, classes, students, selectedMonth.month, selectedMonth.year]);
+    return feeService.summary(
+      feeRecords,
+      classes,
+      selectedMonth.month,
+      selectedMonth.year,
+      students,
+      resolveAmount,
+    );
+  }, [feeRecords, classes, students, selectedMonth.month, selectedMonth.year, resolveAmount]);
 
   const totalCollection = useMemo(() => {
     return monthlySummary.reduce((sum, cls) => sum + cls.collectedAmount, 0);
@@ -181,7 +214,9 @@ export function FeePage({ settings, students, activeSchoolId, setBarSubtitle }) 
           student.admissionNo || '-',
           student.name || '',
           student.fatherName || '',
-          status ? feeCore.formatCurrency(feeCore.FEE_AMOUNT) : '-',
+          status
+            ? feeCore.formatCurrency(status.amount || resolveAmount(student))
+            : feeCore.formatCurrency(resolveAmount(student)),
           status ? 'Paid' : 'Pending'
         ];
       });
@@ -296,7 +331,9 @@ export function FeePage({ settings, students, activeSchoolId, setBarSubtitle }) 
                           <TableCell className="whitespace-nowrap font-medium">{student.name || "—"}</TableCell>
                           <TableCell className="whitespace-nowrap text-muted-foreground">{student.fatherName || "—"}</TableCell>
                           <TableCell className="whitespace-nowrap text-right tabular-nums">
-                            {feeRecord ? feeService.formatCurrency(feeCore.FEE_AMOUNT) : "—"}
+                            {feeService.formatCurrency(
+                              feeRecord?.amount ?? resolveAmount(student),
+                            )}
                           </TableCell>
                           <TableCell className="text-center">
                             <Badge variant={feeStatus.paid ? "default" : "destructive"}>
@@ -337,7 +374,9 @@ export function FeePage({ settings, students, activeSchoolId, setBarSubtitle }) 
         <div className="min-w-0">
           <h1 className="m-0 text-2xl font-bold tracking-tight text-primary">Fee Collection</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Monthly summary · {feeCore.formatCurrency(feeCore.FEE_AMOUNT)} per student
+            {privateSchool
+              ? `Private school · class-wise tuition · ${schoolSectorLabel(settings)}`
+              : `Monthly summary · ${feeCore.formatCurrency(feeService.effectiveAmount(settings))} per student`}
           </p>
         </div>
         <div className="space-y-1.5">
@@ -383,7 +422,7 @@ export function FeePage({ settings, students, activeSchoolId, setBarSubtitle }) 
             <div className="text-3xl font-bold tabular-nums">{feeCore.formatCurrency(totalExpected - totalCollection)}</div>
             <div className="mt-1 text-xs opacity-80">
               {totalExpected - totalCollection > 0
-                ? `${((totalExpected - totalCollection) / feeCore.FEE_AMOUNT).toFixed(0)} students pending`
+                ? `${monthlySummary.reduce((n, c) => n + (c.pendingCount || 0), 0)} students pending`
                 : "All collected!"}
             </div>
           </CardContent>
@@ -461,7 +500,11 @@ export function FeePage({ settings, students, activeSchoolId, setBarSubtitle }) 
       <div className="flex items-start gap-3 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
         <AlertTriangle size={18} className="mt-0.5 shrink-0 text-amber-600" />
         <p className="m-0 leading-relaxed">
-          <strong>Note:</strong> Each student pays {feeCore.formatCurrency(feeCore.FEE_AMOUNT)} per month. Open a class row or View Details to mark payments and export a PDF.
+          <strong>Note:</strong>{" "}
+          {privateSchool
+            ? "Private schools bill class-wise tuition (set under Fee structure). "
+            : `Each student pays ${feeCore.formatCurrency(feeService.effectiveAmount(settings))} per month. `}
+          Open a class row or View Details to mark payments and export a PDF.
         </p>
       </div>
     </div>

@@ -27,6 +27,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ModulePageShell } from "@/components/ModulePageShell";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { cn } from "@/lib/utils";
+import {
+  SCHOOL_SECTOR,
+  schoolSectorLabel,
+  applySchoolSector,
+} from "@/shared/schoolCategory.js";
 import * as H from "@/shared/helpers";
 
 
@@ -1866,13 +1871,52 @@ export function SettingsPage({settings,setSettings,setSchools,students,setStuden
                     <Input value={settings.ddoCode||""} onChange={e=>setSettings(s=>({...s,ddoCode:e.target.value}))} placeholder="DDO code"/>
                   </div>
                   <div className="space-y-1.5">
+                    <Label>School category (fee model)</Label>
+                    <NativeSelect
+                      value={schoolSectorLabel(settings)}
+                      onChange={(e) => {
+                        const sector = e.target.value;
+                        setSettings((s) => applySchoolSector(s, sector));
+                      }}
+                      className="w-full"
+                    >
+                      <NativeSelectOption value={SCHOOL_SECTOR.PUBLIC}>
+                        Public / Government
+                      </NativeSelectOption>
+                      <NativeSelectOption value={SCHOOL_SECTOR.PRIVATE}>
+                        Private
+                      </NativeSelectOption>
+                    </NativeSelect>
+                    <p className="text-[11px] text-muted-foreground m-0">
+                      {schoolSectorLabel(settings) === SCHOOL_SECTOR.PRIVATE
+                        ? "Private fees: class tuition, admission & annual charges in Fees & Finance."
+                        : "Public fees: flat monthly fee (default Rs 20)."}
+                    </p>
+                  </div>
+                  <div className="space-y-1.5">
                     <Label>School Type</Label>
-                    <NativeSelect value={settings.schoolType||""} onChange={e=>setSettings(s=>({...s,schoolType:e.target.value}))} className="w-full">
+                    <NativeSelect
+                      value={settings.schoolType||""}
+                      onChange={(e) => {
+                        const schoolType = e.target.value;
+                        setSettings((s) => {
+                          if (schoolType === "Private") {
+                            return { ...applySchoolSector(s, SCHOOL_SECTOR.PRIVATE), schoolType: "Private" };
+                          }
+                          if (!schoolType) return { ...s, schoolType: "" };
+                          return {
+                            ...applySchoolSector(s, SCHOOL_SECTOR.PUBLIC),
+                            schoolType,
+                          };
+                        });
+                      }}
+                      className="w-full"
+                    >
                       <NativeSelectOption value="">Select type</NativeSelectOption>
-                      <NativeSelectOption value="Government">Government</NativeSelectOption>
-                      <NativeSelectOption value="Semi-Government">Semi-Government</NativeSelectOption>
+                      <NativeSelectOption value="Government">Government (Public)</NativeSelectOption>
+                      <NativeSelectOption value="Semi-Government">Semi-Government (Public)</NativeSelectOption>
                       <NativeSelectOption value="Private">Private</NativeSelectOption>
-                      <NativeSelectOption value="Model School">Model School</NativeSelectOption>
+                      <NativeSelectOption value="Model School">Model School (Public)</NativeSelectOption>
                       <NativeSelectOption value="Special Education">Special Education</NativeSelectOption>
                     </NativeSelect>
                   </div>

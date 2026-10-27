@@ -85,7 +85,15 @@ export function getMonthlyFeeRecords(feeRecords, month, year) {
   return feeRecords.filter(rec => rec.month === month && rec.year === year);
 }
 
-export function getClassFeeSummary(feeRecords, classes, month, year, students = []) {
+function amountForStudent(student, resolveAmount) {
+  if (typeof resolveAmount === "function") {
+    const n = Number(resolveAmount(student));
+    if (Number.isFinite(n) && n >= 0) return n;
+  }
+  return FEE_AMOUNT;
+}
+
+export function getClassFeeSummary(feeRecords, classes, month, year, students = [], resolveAmount) {
   const summary = [];
 
   classes.forEach(cls => {
@@ -93,7 +101,10 @@ export function getClassFeeSummary(feeRecords, classes, month, year, students = 
       const studentClass = resolveClass(classes, s.classId);
       return studentClass && String(studentClass.id) === String(cls.id);
     });
-    const expectedAmount = classStudents.length * FEE_AMOUNT;
+    const expectedAmount = classStudents.reduce(
+      (sum, s) => sum + amountForStudent(s, resolveAmount),
+      0,
+    );
 
     const classRecords = feeRecords.filter(
       rec => {
@@ -121,7 +132,7 @@ export function getClassFeeSummary(feeRecords, classes, month, year, students = 
   return summary;
 }
 
-export function getClassFeeStatus(feeRecords, { classId, month, year, students, classes }) {
+export function getClassFeeStatus(feeRecords, { classId, month, year, students, classes, resolveAmount }) {
   const classStudents = students.filter(s => {
     const studentClass = resolveClass(classes, s.classId);
     return studentClass && String(studentClass.id) === String(classId);
@@ -140,8 +151,13 @@ export function getClassFeeStatus(feeRecords, { classId, month, year, students, 
   
   const paid = paidStudents.length
   const pending = total - paid
-  const expectedAmount = total * FEE_AMOUNT
-  const collectedAmount = paid * FEE_AMOUNT
+  const expectedAmount = classStudents.reduce((sum, s) => sum + amountForStudent(s, resolveAmount), 0)
+  const collectedAmount = paidStudents.reduce((sum, s) => {
+    const rec = feeRecords.find(
+      r => String(r.studentId) === String(s.id) && String(r.classId) === String(classId) && r.month === month && r.year === year,
+    )
+    return sum + (Number(rec?.amount) || amountForStudent(s, resolveAmount))
+  }, 0)
   
   return {
     total,
@@ -199,7 +215,7 @@ export function markStudentFeePaid(feeRecords, { studentId, classId, month, year
   }
 }
 
-export function markAllClassFeePaid(feeRecords, { classId, month, year, students, classes }) {
+export function markAllClassFeePaid(feeRecords, { classId, month, year, students, classes, resolveAmount }) {
   const classStudents = students.filter(s => {
     const studentClass = resolveClass(classes, s.classId);
     return studentClass && String(studentClass.id) === String(classId);
@@ -220,7 +236,7 @@ export function markAllClassFeePaid(feeRecords, { classId, month, year, students
       classId: String(classId),
       month,
       year,
-      amount: FEE_AMOUNT,
+      amount: amountForStudent(student, resolveAmount),
       paidAt: new Date().toISOString()
     }
   })

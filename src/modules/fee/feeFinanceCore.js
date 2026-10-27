@@ -7,16 +7,27 @@ import {
   formatCurrency,
   getMonthlyFeeRecords,
 } from './feeCore'
+import {
+  isPrivateSchool,
+  resolveMonthlyTuition,
+  PUBLIC_FEE_AMOUNT,
+} from '@/shared/schoolCategory.js'
 
 export const FEE_FINANCE_TABS = [
   { id: 'overview', l: 'Overview' },
   { id: 'collection', l: 'Collection' },
+  { id: 'structure', l: 'Fee structure' },
   { id: 'dues', l: 'Dues' },
   { id: 'receipts', l: 'Receipts' },
   { id: 'concessions', l: 'Concessions' },
   { id: 'expenses', l: 'Expenses' },
   { id: 'reports', l: 'Reports' },
 ]
+
+export function feeTabsForSchool(settings) {
+  if (isPrivateSchool(settings)) return FEE_FINANCE_TABS
+  return FEE_FINANCE_TABS.filter((t) => t.id !== 'structure')
+}
 
 export const CONCESSION_TYPES = ['Full waiver', 'Half fee', 'Sibling discount', 'Staff child', 'Scholarship', 'Other']
 export const EXPENSE_CATEGORIES = ['Utilities', 'Supplies', 'Maintenance', 'Salaries', 'Events', 'Transport', 'Other']
@@ -31,7 +42,12 @@ function newId(prefix = 'fin') {
 export function getEffectiveFeeAmount(settings) {
   const n = Number(settings?.feeAmount)
   if (Number.isFinite(n) && n >= 0) return n
-  return FEE_AMOUNT
+  return isPrivateSchool(settings) ? 2500 : PUBLIC_FEE_AMOUNT || FEE_AMOUNT
+}
+
+/** Per-student monthly due before concession (supports private class tuition). */
+export function makeTuitionResolver(settings, classes) {
+  return (student) => resolveMonthlyTuition(settings, student, classes)
 }
 
 export function loadConcessions(schoolId) {
@@ -139,7 +155,23 @@ export function removeExpense(list, id) {
   return (Array.isArray(list) ? list : []).filter((e) => e.id !== id)
 }
 
-export function buildDuesList({ feeRecords, students, classes, month, year, concessions = [], feeAmount = FEE_AMOUNT }) {
+export function buildDuesList({
+  feeRecords,
+  students,
+  classes,
+  month,
+  year,
+  concessions = [],
+  feeAmount = FEE_AMOUNT,
+  resolveAmount,
+  settings,
+}) {
+  const resolve =
+    typeof resolveAmount === 'function'
+      ? resolveAmount
+      : settings
+        ? makeTuitionResolver(settings, classes)
+        : () => feeAmount
   const rows = []
   ;(Array.isArray(students) ? students : []).forEach((s) => {
     const cls = resolveClass(classes, s.classId)
@@ -152,7 +184,8 @@ export function buildDuesList({ feeRecords, students, classes, month, year, conc
     })
     if (status.paid) return
     const conc = getStudentConcession(concessions, s.id)
-    const due = applyConcessionToAmount(feeAmount, conc)
+    const base = Number(resolve(s))
+    const due = applyConcessionToAmount(Number.isFinite(base) ? base : feeAmount, conc)
     rows.push({
       studentId: s.id,
       name: s.name || 'Student',
@@ -203,16 +236,32 @@ export function summarizeFeeFinance({
   expenses = [],
   concessions = [],
   feeAmount = FEE_AMOUNT,
+  settings,
+  resolveAmount,
 }) {
-  const classSummary = getClassFeeSummary(feeRecords, classes, month, year, students)
+  const resolve =
+    typeof resolveAmount === 'function'
+      ? resolveAmount
+      : settings
+        ? makeTuitionResolver(settings, classes)
+        : () => feeAmount
+  const classSummary = getClassFeeSummary(feeRecords, classes, month, year, students, resolve)
   const paidCount = classSummary.reduce((s, c) => s + c.paidCount, 0)
   const totalStudents = classSummary.reduce((s, c) => s + c.totalStudents, 0)
-  // Records store actual paid amounts; expected uses configured fee amount
   const collected = (Array.isArray(feeRecords) ? feeRecords : [])
     .filter((r) => r.month === month && r.year === year)
     .reduce((s, r) => s + (Number(r.amount) || 0), 0)
-  const expected = totalStudents * feeAmount
-  const dues = buildDuesList({ feeRecords, students, classes, month, year, concessions, feeAmount })
+  const expected = classSummary.reduce((s, c) => s + c.expectedAmount, 0)
+  const dues = buildDuesList({
+    feeRecords,
+    students,
+    classes,
+    month,
+    year,
+    concessions,
+    feeAmount,
+    resolveAmount: resolve,
+  })
   const adjustedPending = dues.reduce((s, d) => s + d.dueAmount, 0)
   const monthExpenses = (Array.isArray(expenses) ? expenses : []).filter((e) => {
     const d = String(e.date || '')
@@ -233,21 +282,26 @@ export function summarizeFeeFinance({
     expenseTotal,
     net: collected - expenseTotal,
     classSummary,
+    isPrivate: isPrivateSchool(settings),
   }
 }
 
-export function buildYearlyFeeTrend(feeRecords, { year, students, classes, feeAmount = FEE_AMOUNT }) {
+export function buildYearlyFeeTrend(feeRecords, { year, students, classes, feeAmount = FEE_AMOUNT, settings, resolveAmount }) {
+  const resolve =
+    typeof resolveAmount === 'function'
+      ? resolveAmount
+      : settings
+        ? makeTuitionResolver(settings, classes)
+        : () => feeAmount
   return getMonthsList().map((m) => {
-    const summary = getClassFeeSummary(feeRecords, classes, m.value, year, students)
+    const summary = getClassFeeSummary(feeRecords, classes, m.value, year, students, resolve)
     const collected = summary.reduce((s, c) => s + c.collectedAmount, 0)
     const expected = summary.reduce((s, c) => s + c.expectedAmount, 0)
-    // If feeAmount differs from FEE_AMOUNT constant used in getClassFeeSummary, scale
-    const scale = FEE_AMOUNT > 0 ? feeAmount / FEE_AMOUNT : 1
     return {
       month: m.value,
       label: m.label.slice(0, 3),
-      collected: Math.round(collected * scale),
-      expected: Math.round(expected * scale),
+      collected: Math.round(collected),
+      expected: Math.round(expected),
     }
   })
 }

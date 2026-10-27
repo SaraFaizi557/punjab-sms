@@ -32,6 +32,13 @@ import { APP_BRAND_LOGO_URL } from "./branding.js";
 import { yieldToMain } from "./yieldToMain.js";
 import { UI } from "./uiTokens.js";
 import { C, schoolOrBrandLogo, APP_BRAND_LOGO, genId } from "./shared/theme";
+import {
+  SCHOOL_SECTOR,
+  settingsForNewSchool,
+  schoolSectorLabel,
+  applySchoolSector,
+} from "./shared/schoolCategory.js";
+import { NativeSelect, NativeSelectOption } from "./components/ui/native-select";
 import { AppDashboardShell } from "./components/AppDashboardShell";
 import { Button } from "./components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "./components/ui/card";
@@ -154,6 +161,10 @@ const defaultSettings = {
   schoolPhoneNo: "",
   forTheMonth: "",
   schoolType: "",
+  /** Public | Private — set at admin registration; drives fee/finance model */
+  schoolSector: "",
+  feeAmount: 20,
+  feeStructure: null,
   schoolLevel: "",
   genderCategory: "",
   schoolShift: "",
@@ -839,6 +850,8 @@ function AdminPage({ schools, setSchools, setSchoolStatus, onSignOut, onResetAll
   const [csEmail, setCsEmail] = useState("");
   const [csAdminName, setCsAdminName] = useState("");
   const [csPassword, setCsPassword] = useState("");
+  /** Public (government) or Private — drives fee/finance model */
+  const [csSector, setCsSector] = useState("Public");
   const [csError, setCsError] = useState("");
   const [csSuccess, setCsSuccess] = useState("");
   // Create school account (operator) form
@@ -949,6 +962,10 @@ function AdminPage({ schools, setSchools, setSchoolStatus, onSignOut, onResetAll
     if (!(csAdminName || "").trim()) { setCsError("Enter admin/contact name."); return; }
     if (!(csEmail || "").trim()) { setCsError("Enter email."); return; }
     if (!(csPassword || "").trim() || String(csPassword).length < 4) { setCsError("Password must be at least 4 characters."); return; }
+    if (csSector !== SCHOOL_SECTOR.PUBLIC && csSector !== SCHOOL_SECTOR.PRIVATE) {
+      setCsError("Select Public or Private school.");
+      return;
+    }
     const cloud = await ensureCloudReady();
     if (!cloud?.ok) {
       setCsError("Cloud is OFF — cannot create a worldwide school login. Fix Cloud ON first.");
@@ -963,7 +980,31 @@ function AdminPage({ schools, setSchools, setSchoolStatus, onSignOut, onResetAll
     const schoolId = genId();
     const schoolName = String(csName).trim();
     const plainPw = String(csPassword).trim();
-    const newSchool = { id: schoolId, name: schoolName, settings: { schoolName, schoolEmail: emailNorm }, students: [], staffProfiles: [], staffTransferHistory: [], retiredStaff: [], timetable: {}, currentSession: defaultSession(), sessions: [defaultSession()], exam_by_session: {}, exam_tm: {}, exam_om: {}, exam_datesheet: { dates: [], cols: [], subs: {}, note: "" }, questionBank: {}, status: "active" };
+    const adminName = String(csAdminName).trim();
+    const seededSettings = settingsForNewSchool({
+      schoolName,
+      schoolEmail: emailNorm,
+      principalName: adminName,
+      sector: csSector,
+    });
+    const newSchool = {
+      id: schoolId,
+      name: schoolName,
+      settings: { ...defaultSettings, ...seededSettings },
+      students: [],
+      staffProfiles: [],
+      staffTransferHistory: [],
+      retiredStaff: [],
+      timetable: {},
+      currentSession: defaultSession(),
+      sessions: [defaultSession()],
+      exam_by_session: {},
+      exam_tm: {},
+      exam_om: {},
+      exam_datesheet: { dates: [], cols: [], subs: {}, note: "" },
+      questionBank: {},
+      status: "active",
+    };
     const nextSchools = [...(schools || []), newSchool];
     setSchools(nextSchools);
     try {
@@ -976,7 +1017,7 @@ function AdminPage({ schools, setSchools, setSchoolStatus, onSignOut, onResetAll
     }
     const userId = genId();
     const pwHash = await hashPassword(plainPw);
-    const newUser = { id: userId, email: emailNorm, password: pwHash, schoolId, name: String(csAdminName).trim(), userType: "principal" };
+    const newUser = { id: userId, email: emailNorm, password: pwHash, schoolId, name: adminName, userType: "principal" };
     await upsertAuthUserToCloud(newUser);
     let verify = await findAuthUserByEmailFromCloud(emailNorm);
     if (!verify) {
@@ -990,9 +1031,43 @@ function AdminPage({ schools, setSchools, setSchoolStatus, onSignOut, onResetAll
       return;
     }
     await saveAuthUsers([...list, newUser]);
-    setCsName(""); setCsEmail(""); setCsAdminName(""); setCsPassword("");
-    setCsSuccess(`School "${schoolName}" created. Login is LIVE worldwide — Email: ${emailNorm}`);
+    setCsName(""); setCsEmail(""); setCsAdminName(""); setCsPassword(""); setCsSector(SCHOOL_SECTOR.PUBLIC);
+    const feeHint =
+      csSector === SCHOOL_SECTOR.PRIVATE
+        ? "Private fee system enabled (class tuition, admission, annual charges)."
+        : "Public/government fee system enabled (flat monthly fee).";
+    setCsSuccess(`School "${schoolName}" (${csSector}) created. ${feeHint} Login LIVE — Email: ${emailNorm}`);
     await pullUsersFromCloud();
+  };
+
+  const handleChangeSchoolSector = async (schoolId, sector) => {
+    const school = (schools || []).find((sc) => sc.id === schoolId);
+    if (!school || school.status === "deleted") return;
+    const current = schoolSectorLabel(school.settings);
+    if (current === sector) return;
+    const label = sector === SCHOOL_SECTOR.PRIVATE ? "Private" : "Public / Government";
+    const feeNote =
+      sector === SCHOOL_SECTOR.PRIVATE
+        ? "Fees & Finance will use private standards (class tuition, admission, annual charges)."
+        : "Fees & Finance will use the public flat monthly fee model.";
+    if (
+      !window.confirm(
+        `Change "${school.settings?.schoolName || school.name}" to ${label}?\n\n${feeNote}`,
+      )
+    ) {
+      return;
+    }
+    const nextSettings = applySchoolSector(school.settings || {}, sector);
+    const nextSchools = (schools || []).map((sc) =>
+      sc.id === schoolId ? { ...sc, settings: nextSettings } : sc,
+    );
+    setSchools(nextSchools);
+    try {
+      await saveSchoolsToCloud(nextSchools, schoolId);
+    } catch (err) {
+      console.warn("School sector cloud save failed", err);
+      alert("Category updated on this device, but cloud sync failed. Check internet and try again.");
+    }
   };
 
   const handleDeleteUser = async (userId) => {
@@ -1218,6 +1293,26 @@ function AdminPage({ schools, setSchools, setSchoolStatus, onSignOut, onResetAll
             <CardContent>
               <form onSubmit={handleCreateSchool} className="flex flex-col gap-3 w-full max-w-[420px]">
                 <div className="space-y-1.5"><Label>School Name</Label><Input type="text" value={csName} onChange={e => setCsName(e.target.value)} placeholder="e.g. PSMS Lahore" /></div>
+                <div className="space-y-1.5">
+                  <Label>School category</Label>
+                  <NativeSelect
+                    value={csSector}
+                    onChange={(e) => setCsSector(e.target.value)}
+                    className="w-full"
+                  >
+                    <NativeSelectOption value={SCHOOL_SECTOR.PUBLIC}>
+                      Public / Government
+                    </NativeSelectOption>
+                    <NativeSelectOption value={SCHOOL_SECTOR.PRIVATE}>
+                      Private
+                    </NativeSelectOption>
+                  </NativeSelect>
+                  <p className="text-[11px] text-muted-foreground m-0 leading-snug">
+                    {csSector === SCHOOL_SECTOR.PRIVATE
+                      ? "Private: class-wise tuition, admission fee, annual charges & deposits in Fees & Finance."
+                      : "Public: existing government-style flat monthly fee (default Rs 20)."}
+                  </p>
+                </div>
                 <div className="space-y-1.5"><Label>Principal / Headmaster Name</Label><Input type="text" value={csAdminName} onChange={e => setCsAdminName(e.target.value)} placeholder="e.g. Mr. Ahmed Khan" /></div>
                 <div className="space-y-1.5"><Label>Login Email</Label><Input type="email" value={csEmail} onChange={e => setCsEmail(e.target.value)} placeholder="school@example.edu" autoComplete="username" /></div>
                 <div className="space-y-1.5"><Label>Login Password</Label><Input type="password" value={csPassword} onChange={e => setCsPassword(e.target.value)} placeholder="Min 4 characters" minLength={4} autoComplete="new-password" /></div>
@@ -1265,6 +1360,15 @@ function AdminPage({ schools, setSchools, setSchoolStatus, onSignOut, onResetAll
                               <strong className="text-slate-800 break-words">{sName}</strong>
                               <span className={`text-[11px] px-1.5 py-0.5 rounded ${status === "deleted" ? "bg-red-100 text-red-700" : status === "stopped" ? "bg-yellow-100 text-yellow-800" : "bg-primary/10 text-primary"}`}>
                                 {status === "deleted" ? "Deleted" : status === "stopped" ? "Stopped" : "Active"}
+                              </span>
+                              <span
+                                className={`text-[11px] px-1.5 py-0.5 rounded ${
+                                  schoolSectorLabel(s.settings) === SCHOOL_SECTOR.PRIVATE
+                                    ? "bg-violet-100 text-violet-800"
+                                    : "bg-slate-200 text-slate-700"
+                                }`}
+                              >
+                                {schoolSectorLabel(s.settings)}
                               </span>
                               {hasLogin && (
                                 <span className="text-[11px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 break-all">
@@ -1363,12 +1467,37 @@ function AdminPage({ schools, setSchools, setSchoolStatus, onSignOut, onResetAll
                           </div>
                         </div>
                         {viewDetailsId === s.id && (
-                          <div className="mt-2.5 p-2.5 bg-white rounded-md border border-slate-200 text-xs text-slate-700 flex flex-col gap-1 break-words">
+                          <div className="mt-2.5 p-2.5 bg-white rounded-md border border-slate-200 text-xs text-slate-700 flex flex-col gap-2 break-words">
                             <div><strong>ID:</strong> <span className="font-mono break-all">{s.id}</span></div>
                             <div><strong>School Name:</strong> {s.settings?.schoolName || "—"}</div>
                             <div><strong>School Code:</strong> {s.settings?.schoolCode || "—"}</div>
                             <div><strong>Email:</strong> <span className="break-all">{s.settings?.schoolEmail || "—"}</span></div>
                             <div><strong>Principal:</strong> {s.settings?.principalName || "—"}</div>
+                            <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-2">
+                              <strong className="shrink-0">Category:</strong>
+                              {status === "deleted" ? (
+                                <span>{schoolSectorLabel(s.settings)}</span>
+                              ) : (
+                                <NativeSelect
+                                  value={schoolSectorLabel(s.settings)}
+                                  onChange={(e) => void handleChangeSchoolSector(s.id, e.target.value)}
+                                  className="w-full sm:w-[220px]"
+                                  size="sm"
+                                >
+                                  <NativeSelectOption value={SCHOOL_SECTOR.PUBLIC}>
+                                    Public / Government
+                                  </NativeSelectOption>
+                                  <NativeSelectOption value={SCHOOL_SECTOR.PRIVATE}>
+                                    Private
+                                  </NativeSelectOption>
+                                </NativeSelect>
+                              )}
+                            </div>
+                            <p className="m-0 text-[11px] text-slate-500">
+                              {schoolSectorLabel(s.settings) === SCHOOL_SECTOR.PRIVATE
+                                ? "Private fee model: class tuition, admission, annual charges (Fees & Finance → Fee structure)."
+                                : "Public fee model: flat monthly fee (default Rs 20)."}
+                            </p>
                             <div><strong>Login accounts:</strong> {hasLogin ? linkedUsers.map(u => u.email).join(", ") : "None — create a login to sign in"}</div>
                             <div><strong>Classes:</strong> {(s.settings?.classes || []).length} · <strong>Students:</strong> {(s.students || []).length} · <strong>Staff:</strong> {(s.staffProfiles || []).length}</div>
                           </div>
