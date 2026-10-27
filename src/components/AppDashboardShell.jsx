@@ -90,14 +90,14 @@ function SyncDot({ isSupabaseConfigured, isOnline, cloudReady, cloudSyncing }) {
           ? "Syncing…"
           : "Connecting…";
   const color = !isSupabaseConfigured
-    ? "bg-muted-foreground/50"
+    ? "bg-slate-400"
     : !isOnline
-      ? "bg-amber-500"
+      ? "bg-amber-400"
       : cloudReady
-        ? "bg-primary"
-        : "bg-primary/50";
+        ? "bg-emerald-400"
+        : "bg-emerald-400/50";
   return (
-    <div className="flex items-center gap-2 px-2 py-1.5 text-[11px] text-muted-foreground">
+    <div className="flex items-center gap-2 px-2 py-1.5 text-[11px] text-sidebar-foreground/75">
       <span className={`size-1.5 shrink-0 rounded-full ${color}`} />
       <span className="truncate group-data-[collapsible=icon]:hidden">{label}</span>
     </div>
@@ -115,7 +115,11 @@ function ShellNav({ nav, page, onNavigate }) {
             <SidebarMenuButton
               isActive={isActive}
               tooltip={item.l}
-              className={isActive ? "bg-primary/10 text-primary data-active:bg-primary/10 data-active:text-primary" : undefined}
+              className={
+                isActive
+                  ? "bg-sidebar-accent text-sidebar-accent-foreground data-active:bg-sidebar-accent data-active:text-sidebar-accent-foreground ring-1 ring-[color:var(--psms-gold)]/40"
+                  : "text-sidebar-foreground/90 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+              }
               onClick={() => {
                 onNavigate?.(item.id);
                 if (isMobile) setOpenMobile(false);
@@ -203,7 +207,7 @@ function UserAccountMenu({
         onClick={() => setOpen((v) => !v)}
       >
         <Avatar className="size-8 rounded-lg">
-          <AvatarFallback className="rounded-lg bg-neutral-900 text-xs font-semibold text-white">
+          <AvatarFallback className="rounded-lg bg-primary text-xs font-semibold text-primary-foreground">
             {initials}
           </AvatarFallback>
         </Avatar>
@@ -217,11 +221,11 @@ function UserAccountMenu({
       {open ? (
         <div
           role="menu"
-          className="absolute bottom-[calc(100%+8px)] left-0 z-50 w-56 rounded-lg border border-border bg-popover p-1 text-popover-foreground shadow-md"
+          className="absolute bottom-[calc(100%+8px)] left-0 z-50 w-56 rounded-lg border border-border bg-popover p-1 text-popover-foreground shadow-lg shadow-primary/10"
         >
           <div className="flex items-center gap-2 px-2 py-1.5 text-left text-sm">
             <Avatar className="size-8 rounded-lg">
-              <AvatarFallback className="rounded-lg bg-neutral-900 text-xs font-semibold text-white">
+              <AvatarFallback className="rounded-lg bg-primary text-xs font-semibold text-primary-foreground">
                 {initials}
               </AvatarFallback>
             </Avatar>
@@ -301,26 +305,26 @@ export function AppDashboardShell({
       >
         <Sidebar
           collapsible="icon"
-          className="app-sidebar no-print border-r border-border bg-sidebar text-sidebar-foreground"
+          className="app-sidebar no-print border-r border-sidebar-border bg-sidebar text-sidebar-foreground shadow-[4px_0_24px_rgba(7,42,82,0.18)]"
         >
-          <SidebarHeader className="border-b border-border">
+          <SidebarHeader className="border-b border-sidebar-border">
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton
                   size="lg"
-                  className="pointer-events-none"
+                  className="pointer-events-none text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                   tooltip={(schoolName || "").trim() || "Punjab-SMS"}
                 >
                   <img
                     src={APP_BRAND_LOGO}
                     alt=""
-                    className="size-8 shrink-0 rounded-lg object-contain"
+                    className="size-8 shrink-0 rounded-lg object-contain bg-white ring-1 ring-[color:var(--psms-gold)]/50"
                   />
                   <div className="grid min-w-0 flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
-                    <span className="truncate font-semibold">
+                    <span className="truncate font-semibold text-sidebar-foreground">
                       {(schoolName || "").trim() || "Punjab-SMS"}
                     </span>
-                    <span className="truncate text-xs text-muted-foreground">
+                    <span className="truncate text-xs text-sidebar-foreground/70">
                       {schoolCode || "School workspace"}
                     </span>
                   </div>
@@ -364,9 +368,9 @@ export function AppDashboardShell({
           <SidebarRail />
         </Sidebar>
 
-        <SidebarInset className="app-main min-w-0 flex-1 overflow-hidden bg-muted/30">
-          <header className="app-header no-print sticky top-0 z-10 flex h-12 shrink-0 items-center gap-2 border-b border-border bg-background/95 px-2 backdrop-blur supports-backdrop-filter:bg-background/80 sm:h-14 sm:px-4">
-            <SidebarTrigger className="-ml-0.5 shrink-0" />
+        <SidebarInset className="app-main min-w-0 flex-1 overflow-hidden bg-slate-100">
+          <header className="app-header no-print sticky top-0 z-10 flex h-12 shrink-0 items-center gap-2 border-b border-slate-200 bg-white px-2 sm:h-14 sm:px-4">
+            <SidebarTrigger className="-ml-0.5 shrink-0 text-[color:var(--psms-navy)]" />
             <Separator orientation="vertical" className="mr-1 hidden h-4 sm:block" />
             <Breadcrumb className="min-w-0 flex-1 overflow-hidden">
               <BreadcrumbList className="flex-nowrap">
@@ -378,14 +382,14 @@ export function AppDashboardShell({
                 <BreadcrumbSeparator className="hidden md:block" />
                 <BreadcrumbItem className="min-w-0">
                   <BreadcrumbPage className="flex min-w-0 items-center gap-2 font-medium text-foreground">
-                    <NavGlyph id={page} className="size-3.5 shrink-0 text-muted-foreground" />
+                    <NavGlyph id={page} className="size-3.5 shrink-0 text-[color:var(--psms-navy)]" />
                     <span className="truncate">{pageTitle || active?.l || "Page"}</span>
                   </BreadcrumbPage>
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>
             {pageSubtitle ? (
-              <Badge variant="secondary" className="hidden max-w-[40%] truncate font-normal lg:inline-flex">
+              <Badge variant="secondary" className="hidden max-w-[40%] truncate border-[color:var(--psms-gold)]/40 bg-[color:var(--psms-gold-soft)] font-normal text-[color:var(--psms-navy)] lg:inline-flex">
                 {pageSubtitle}
               </Badge>
             ) : null}

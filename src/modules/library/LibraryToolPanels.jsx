@@ -41,7 +41,7 @@ export function LibraryOverviewPanel({ activeSchoolId, onGoTab }) {
 
   const cards = [
     { label: "Titles", value: summary.bookCount, hint: `${summary.totalCopies} copies`, tab: "catalog", accent: "#1e3a5f" },
-    { label: "Available", value: summary.availableCopies, hint: "Ready to issue", tab: "catalog", accent: "#2563eb" },
+    { label: "Available", value: summary.availableCopies, hint: "Ready to issue", tab: "catalog", accent: "#059669" },
     { label: "Issued now", value: summary.issuedCount, hint: `${summary.returnedCount} returned (history)`, tab: "catalog", accent: "#0f766e" },
     { label: "Overdue", value: summary.overdueCount, hint: money(summary.fineTotal) + " fines", tab: "overdue", accent: "#b91c1c" },
   ];

@@ -603,15 +603,15 @@ function AuthScreen({ onSignIn, setActiveSchoolId }) {
 
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900" style={{ fontFamily: UI.fontApp }}>
+    <div className="psms-auth-bg min-h-screen min-h-[100dvh] flex items-center justify-center p-4" style={{ fontFamily: UI.fontApp }}>
       {panel === "user" ? (
-        <Card className="w-full max-w-[440px] overflow-hidden shadow-2xl rounded-2xl">
+        <Card className="w-full max-w-[440px] overflow-hidden rounded-2xl border-white/20 shadow-[0_24px_60px_rgba(7,42,82,0.45)]">
           {/* Header */}
-          <div className="flex items-center gap-3 px-6 py-5 text-white" style={{ background: "var(--color-navy,#1a3a6b)" }}>
-            <img src={APP_BRAND_LOGO} alt="" className="w-20 h-20 object-contain shrink-0 rounded-lg bg-white/10 p-1" />
+          <div className="psms-brand-bar flex items-center gap-3 px-6 py-5 text-white">
+            <img src={APP_BRAND_LOGO} alt="" className="w-20 h-20 object-contain shrink-0 rounded-lg bg-white/10 p-1 ring-1 ring-white/20" />
             <div>
-              <div className="font-bold text-[17px]">Punjab-SMS</div>
-              <div className="text-xs opacity-80 mt-0.5">Sign in with your account</div>
+              <div className="font-bold text-[17px] tracking-tight">Punjab-SMS</div>
+              <div className="text-xs opacity-85 mt-0.5">Sign in with your account</div>
             </div>
           </div>
           <CardContent className="p-6">
@@ -655,19 +655,19 @@ function AuthScreen({ onSignIn, setActiveSchoolId }) {
           </CardContent>
         </Card>
       ) : (
-        <Card className="w-full max-w-[400px] overflow-hidden shadow-2xl rounded-2xl">
-          <div className="bg-slate-800 text-white px-6 py-5">
+        <Card className="w-full max-w-[400px] overflow-hidden rounded-2xl border-white/20 shadow-[0_24px_60px_rgba(7,42,82,0.45)]">
+          <div className="psms-brand-bar text-white px-6 py-5">
             <Button
               type="button"
               variant="link"
               size="sm"
-              className="mb-3 h-auto justify-start gap-1 p-0 text-[13px] text-slate-400 hover:text-slate-200"
+              className="mb-3 h-auto justify-start gap-1 p-0 text-[13px] text-white/70 hover:text-white"
               onClick={() => { setPanel("user"); setError(""); }}
             >
               ← Back to User Login
             </Button>
-            <div className="font-bold text-[17px]">Administrator Login</div>
-            <div className="text-xs opacity-70 mt-1">Restricted access — authorised personnel only</div>
+            <div className="font-bold text-[17px] tracking-tight">Administrator Login</div>
+            <div className="text-xs opacity-75 mt-1">Restricted access — authorised personnel only</div>
           </div>
           <CardContent className="p-6">
             {error && (
@@ -682,7 +682,7 @@ function AuthScreen({ onSignIn, setActiveSchoolId }) {
                 <Label htmlFor="admin-password">Admin Password</Label>
                 <Input id="admin-password" type="password" value={adminPassword} onChange={e => setAdminPassword(e.target.value)} placeholder="••••••••" required />
               </div>
-              <Button type="submit" className="w-full bg-slate-800 hover:bg-slate-700">
+              <Button type="submit" className="w-full">
                 Login as Administrator
               </Button>
             </form>
@@ -1016,9 +1016,9 @@ function AdminPage({ schools, setSchools, setSchoolStatus, onSignOut, onResetAll
   };
 
   return (
-    <div className="admin-panel min-h-screen min-h-[100dvh] bg-slate-100 flex flex-col overflow-x-clip" style={{ fontFamily: UI.fontApp }}>
+    <div className="admin-panel min-h-screen min-h-[100dvh] flex flex-col overflow-x-clip bg-slate-100" style={{ fontFamily: UI.fontApp }}>
       {/* Brand blue header — stacks on mobile */}
-      <header className="admin-topbar bg-primary text-primary-foreground px-3 py-3 sm:px-5 shrink-0">
+      <header className="admin-topbar psms-brand-bar text-white px-3 py-3 sm:px-5 shrink-0 shadow-[0_8px_24px_rgba(7,42,82,0.25)]">
         <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
           <img
             src={APP_BRAND_LOGO}

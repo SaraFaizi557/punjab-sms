@@ -10,7 +10,7 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <meta name="theme-color" content="#0B3A6E" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#0B3A6E" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#072A52" media="(prefers-color-scheme: dark)" />
     <meta name="application-name" content="Punjab-SMS" />
     <meta name="apple-mobile-web-app-title" content="Punjab-SMS" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -24,13 +24,13 @@
   <body>
     <div id="root">
       <!-- Instant paint before JS bundles load (removed when React mounts). -->
-      <div id="psms-boot-splash" role="status" aria-live="polite" aria-label="Loading Punjab-SMS" style="position:fixed;inset:0;z-index:2147483646;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#fff;font-family:Montserrat,system-ui,sans-serif">
+      <div id="psms-boot-splash" role="status" aria-live="polite" aria-label="Loading Punjab-SMS" style="position:fixed;inset:0;z-index:2147483646;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#F8FAFC;font-family:Montserrat,system-ui,sans-serif">
         <img src="/app-brand-logo.png" alt="" width="200" height="114" style="width:min(78vw,280px);height:auto;object-fit:contain" />
         <div style="margin-top:20px;width:min(200px,72vw)">
-          <div style="height:5px;border-radius:999px;background:#e5e7eb;overflow:hidden">
-            <div style="height:100%;width:0;border-radius:999px;background:#0B3A6E;animation:psms-boot-bar 8s linear forwards"></div>
+          <div style="height:5px;border-radius:999px;background:#E2E8F0;overflow:hidden">
+            <div style="height:100%;width:0;border-radius:999px;background:linear-gradient(90deg,#047857,#059669 82%,#D4AF37);animation:psms-boot-bar 8s linear forwards"></div>
           </div>
-          <div style="margin-top:10px;text-align:center;font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#64748b">Loading…</div>
+          <div style="margin-top:10px;text-align:center;font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#64748B">Loading…</div>
         </div>
       </div>
       <style>@keyframes psms-boot-bar{to{width:100%}}@media (prefers-reduced-motion:reduce){#psms-boot-splash [style*="psms-boot-bar"]{animation:none;width:100%!important}}</style>

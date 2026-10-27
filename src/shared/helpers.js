@@ -818,7 +818,7 @@ export async function addPdfBrandingLogoRow(doc, settingsLogo, left, yTop) {
     try {
       doc.addImage(data, fmt === "JPEG" ? "PNG" : "JPEG", left, yTop, size, size);
     } catch {
-      doc.setFillColor(26, 58, 107);
+      doc.setFillColor(11, 58, 110);
       doc.rect(left, yTop, size, size, "F");
     }
   }
@@ -1064,7 +1064,7 @@ export async function appendExportTablePdfSection(doc, settings, session, tableN
       }
     : {
         headStyles: {
-          fillColor: [26, 58, 107],
+          fillColor: [11, 58, 110],
           textColor: [255, 255, 255],
           fontStyle: "bold",
           halign: "center",
@@ -1279,7 +1279,7 @@ export async function exportConsolidatedSheetToPdf(settings, session, exam, clas
     showHead: "everyPage",
     theme: "grid",
     headStyles: {
-      fillColor: [26, 58, 107],
+      fillColor: [11, 58, 110],
       textColor: [255, 255, 255],
       fontStyle: "bold",
       halign: "center",

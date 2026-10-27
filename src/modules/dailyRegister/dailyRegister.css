@@ -1,25 +1,25 @@
 ﻿/* Ported from Downloads/index.html — scoped to .daily-register */
 .daily-register {
   --green: #0B3A6E;
-  --green-2: #1d4ed8;
-  --green-soft: #dbeafe;
+  --green-2: #059669;
+  --green-soft: #D1FAE5;
   --cream: #fff9ef;
-  --bar: #eff6ff;
-  --ink: #0f172a;
-  --muted: #64748b;
-  --line: #bfdbfe;
+  --bar: #F1F5F9;
+  --ink: #0F172A;
+  --muted: #64748B;
+  --line: #E2E8F0;
   --page: #fff3c4;
   --total: #f8e7a8;
-  --avg: #cfe8ff;
-  --sba: #dbeafe;
+  --avg: #D1FAE5;
+  --sba: #E8F0F8;
   --remarks: #e8d7f0;
   --danger: #a33b3b;
   color: var(--ink);
   font-family: "Segoe UI", Calibri, Arial, sans-serif;
   background:
-    radial-gradient(circle at 8% 0%, #dbeafe 0%, transparent 40%),
-    radial-gradient(circle at 92% 0%, #fff3c4 0%, transparent 34%),
-    #f8fafc;
+    radial-gradient(circle at 8% 0%, #E8F0F8 0%, transparent 40%),
+    radial-gradient(circle at 92% 0%, #D1FAE5 0%, transparent 34%),
+    #F8FAFC;
   border-radius: 12px;
 }
 

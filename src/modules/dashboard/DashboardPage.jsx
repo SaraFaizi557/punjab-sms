@@ -45,10 +45,10 @@ function KpiCard({ icon: IconCmp, label, value, hint, onClick }) {
   const inner = (
     <Card
       size="sm"
-      className="h-full min-w-0 bg-card shadow-none transition-colors hover:bg-muted/40"
+      className="h-full min-w-0 border-slate-200 bg-white shadow-sm transition-colors hover:border-[color:var(--psms-gold)]/50 hover:shadow-md"
     >
       <CardHeader className="pb-0">
-        <div className="flex size-9 items-center justify-center rounded-lg border border-primary/20 bg-primary/10 text-primary">
+        <div className="flex size-9 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-[color:var(--psms-navy)]">
           {IconCmp ? <IconCmp className="size-4" aria-hidden /> : null}
         </div>
         {onClick ? (
@@ -418,8 +418,8 @@ export function DashboardPage({
         />
       </div>
 
-      <Card size="sm" className="min-w-0 shadow-none">
-        <CardHeader className="border-b">
+      <Card size="sm" className="min-w-0 border-slate-200 bg-white shadow-sm">
+        <CardHeader className="border-b border-slate-200">
           <CardTitle>Quick Actions</CardTitle>
           <CardDescription>Jump into the most common daily tasks</CardDescription>
         </CardHeader>
@@ -435,7 +435,7 @@ export function DashboardPage({
                   onClick={action.run}
                   className="h-auto min-h-0 justify-start gap-3 whitespace-normal px-3 py-3 text-left"
                 >
-                  <span className="flex size-9 shrink-0 items-center justify-center rounded-md border border-primary/20 bg-primary/10 text-primary">
+                  <span className="flex size-9 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-slate-50 text-[color:var(--psms-navy)]">
                     <Icon className="size-4" aria-hidden />
                   </span>
                   <span className="min-w-0 flex-1">
@@ -667,7 +667,7 @@ export function DashboardPage({
                         {row.total > 0 ? (
                           <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
                             <div
-                              className="h-full rounded-full bg-primary"
+                              className="h-full rounded-full bg-emerald-600"
                               style={{ width: `${passRatePct}%` }}
                             />
                           </div>

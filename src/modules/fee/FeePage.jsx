@@ -360,7 +360,7 @@ export function FeePage({ settings, students, activeSchoolId, setBarSubtitle }) 
             <div className="mt-1 text-xs opacity-80">{monthlySummary.length} classes</div>
           </CardContent>
         </Card>
-        <Card className="border-0 text-white shadow-md" style={{ background: "linear-gradient(135deg, #0B3A6E 0%, #2563eb 100%)" }}>
+        <Card className="border-0 text-white shadow-md" style={{ background: "linear-gradient(135deg, #0B3A6E 0%, #059669 100%)" }}>
           <CardContent className="p-5">
             <div className="mb-1 text-sm opacity-90">Total Collected</div>
             <div className="text-3xl font-bold tabular-nums">{feeCore.formatCurrency(totalCollection)}</div>

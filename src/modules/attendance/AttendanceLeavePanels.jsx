@@ -71,14 +71,14 @@ export function AttendanceOverviewPanel({
       value: `${summary.students.present}/${summary.students.total}`,
       hint: `${summary.students.attendanceRate}% · ${summary.students.unmarked} unmarked`,
       tab: "students",
-      accent: "#2563eb",
+      accent: "#059669",
     },
     {
       label: "Students absent / late",
       value: `${summary.students.absent} / ${summary.students.late}`,
       hint: "Needs follow-up",
       tab: "reports",
-      accent: "#b91c1c",
+      accent: "#DC2626",
     },
     ...(canManageStaff
       ? [

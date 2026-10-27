@@ -53,5 +53,9 @@ export const UI = {
   }),
 };
 
-/** Hex navy for HTML/PDF strings where CSS variables are not available */
+/** Recommended lock: navy layout, emerald actions, gold accents */
 export const UI_NAVY_HEX = "#0B3A6E";
+export const UI_EMERALD_HEX = "#059669";
+export const UI_GOLD_HEX = "#D4AF37";
+export const UI_AZURE_HEX = "#059669";
+export const UI_CRIMSON_HEX = "#DC2626";
