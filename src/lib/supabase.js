@@ -139,20 +139,31 @@ export async function initSupabaseCloud() {
     const runtime = readRuntimeCloud()
     if (runtime.url && runtime.anonKey) next = runtime
 
-    try {
-      const base = (import.meta.env.BASE_URL || '/').replace(/\/?$/, '/')
-      const res = await fetch(`${base}psms-config.json?t=${Date.now()}`, { cache: 'no-store' })
-      if (res.ok) {
-        const json = await res.json()
-        const url = String(json.url || json.supabaseUrl || '').trim()
-        const anonKey = String(json.anonKey || json.supabaseAnonKey || '').trim()
-        if (url && anonKey) {
-          next = { url, anonKey }
-          window.__PSMS_CLOUD__ = next
+    // Skip network when inline/runtime config is already present (avoids blank-screen wait).
+    if (!(next.url && next.anonKey)) {
+      try {
+        const base = (import.meta.env.BASE_URL || '/').replace(/\/?$/, '/')
+        const controller = typeof AbortController !== 'undefined' ? new AbortController() : null
+        const timer = controller
+          ? setTimeout(() => controller.abort(), 2500)
+          : null
+        const res = await fetch(`${base}psms-config.json?t=${Date.now()}`, {
+          cache: 'no-store',
+          signal: controller?.signal,
+        })
+        if (timer) clearTimeout(timer)
+        if (res.ok) {
+          const json = await res.json()
+          const url = String(json.url || json.supabaseUrl || '').trim()
+          const anonKey = String(json.anonKey || json.supabaseAnonKey || '').trim()
+          if (url && anonKey) {
+            next = { url, anonKey }
+            window.__PSMS_CLOUD__ = next
+          }
         }
+      } catch {
+        // keep prior `next`
       }
-    } catch {
-      // keep prior `next`
     }
   }
 

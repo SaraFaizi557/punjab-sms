@@ -1,16 +1,33 @@
 import { createElement, Fragment } from "react";
 import { systemSettingsService } from "@/services";
-import * as XLSX from "@/xlsxClient.js";
-import jsPDFModule from "jspdf";
-import autoTable from "jspdf-autotable";
+import { APP_BRAND_LOGO_URL } from "@/branding.js";
 import { C, schoolOrBrandLogo, genId } from "@/shared/theme";
 import { UI } from "@/uiTokens.js";
 import { yieldToMain } from "@/yieldToMain.js";
 
-const jsPDF =
-  typeof jsPDFModule === "function"
-    ? jsPDFModule
-    : jsPDFModule?.jsPDF ?? jsPDFModule?.default;
+/** Lazy-load heavy export libs so they stay off the first-paint path. */
+let xlsxModPromise;
+let pdfModPromise;
+
+function loadXlsx() {
+  if (!xlsxModPromise) xlsxModPromise = import("@/xlsxClient.js");
+  return xlsxModPromise;
+}
+
+async function loadPdf() {
+  if (!pdfModPromise) {
+    pdfModPromise = Promise.all([import("jspdf"), import("jspdf-autotable")]).then(
+      ([jspdfMod, autoTableMod]) => {
+        const raw = jspdfMod.default ?? jspdfMod;
+        const jsPDF =
+          typeof raw === "function" ? raw : raw?.jsPDF ?? raw?.default;
+        const autoTable = autoTableMod.default ?? autoTableMod;
+        return { jsPDF, autoTable };
+      },
+    );
+  }
+  return pdfModPromise;
+}
 
 export const DASHBOARD_EXAM_LS = "sms_dashboard_exam";
 
@@ -755,6 +772,7 @@ export function getStaffInPortionMask(settings,timetable,mask,staffProfiles){
 
 export async function downloadExcel(wb, filename) {
   await yieldToMain();
+  const XLSX = await loadXlsx();
   const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
   const blob = new Blob([wbout], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
   const url = URL.createObjectURL(blob);
@@ -832,6 +850,7 @@ export function sanitizePdfFilenamePart(raw) {
 }
 export async function exportTableToExcel(settings, session, tableName, columnHeaders, dataRows, filename) {
   await yieldToMain();
+  const XLSX = await loadXlsx();
   const meta = getExportHeaderMeta(settings, session, tableName);
   const headerRows = [
     [meta.schoolName],
@@ -970,6 +989,7 @@ export function isTeacherPlannerTimetablePdfTitle(tableName) {
  * @param {{ subtitleOverride?: string }} [exportPdfOptions] — optional PDF header subtitle (e.g. class-first attendance titles).
  */
 export async function appendExportTablePdfSection(doc, settings, session, tableName, columnHeaders, dataRows, htmlTableEl, exportPdfOptions) {
+  const { autoTable } = await loadPdf();
   const meta = getExportHeaderMeta(settings, session, tableName);
   const pageW = doc.internal.pageSize.getWidth();
   const yTop = 10;
@@ -1117,6 +1137,7 @@ export async function appendExportTablePdfSection(doc, settings, session, tableN
 
 /** Class planner (all classes) / Teacher planner (all staff): one PDF, one section per class or staff member. */
 export async function exportTimetableBatchPlannerPdf(settings, session, sections, filename) {
+  const { jsPDF } = await loadPdf();
   const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
   for (let i = 0; i < sections.length; i++) {
     if (i > 0) doc.addPage();
@@ -1131,6 +1152,7 @@ export async function exportTimetableBatchPlannerPdf(settings, session, sections
  * @param {{ subtitleOverride?: string }} [exportPdfOptions] — optional PDF header subtitle.
  */
 export async function exportTableToPdf(settings, session, tableName, columnHeaders, dataRows, filename, htmlTableEl, exportPdfOptions) {
+  const { jsPDF } = await loadPdf();
   const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
   await appendExportTablePdfSection(doc, settings, session, tableName, columnHeaders, dataRows, htmlTableEl, exportPdfOptions);
   doc.save(filename || "export.pdf");
@@ -1181,6 +1203,7 @@ export async function exportConsolidatedSheetToPdf(settings, session, exam, clas
   const totalStudents = rows.length;
   const logoData = await brandingLogoDataUrlForPdf(settings?.logo);
   const logoFmt = logoData ? pdfDataUrlFormat(logoData) : null;
+  const { jsPDF, autoTable } = await loadPdf();
   const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
   const pageW = doc.internal.pageSize.getWidth();
   const left = 10;
@@ -1573,6 +1596,7 @@ export function parseWorkbook(file, cb){
   const r = new FileReader();
   r.onerror = () => cb(new Error("Could not read file. Make sure it is a valid .xlsx or .xls file."), null);
   r.onload = (e) => {
+    void loadXlsx().then((XLSX) => {
     try {
       const wb = XLSX.read(e.target.result, { type: "array" });
       const getSheet = (name) => {
@@ -1615,6 +1639,7 @@ export function parseWorkbook(file, cb){
     } catch (err) {
       cb(err, null);
     }
+    }).catch((err) => cb(err, null));
   };
   r.readAsArrayBuffer(file);
 }

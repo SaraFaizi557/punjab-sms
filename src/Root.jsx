@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
-import App from "./App.jsx";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { SplashScreen } from "./SplashScreen.jsx";
+
+const App = lazy(() => import("./App.jsx"));
 
 /** Short splash so startup feels instant; fade is brief. */
 const SPLASH_MIN_MS = 320;
@@ -26,7 +27,9 @@ export default function Root() {
   return (
     <>
       {showSplash && <SplashScreen exiting={splashExiting} progressDurationMs={splashMinMs} />}
-      <App />
+      <Suspense fallback={null}>
+        <App />
+      </Suspense>
     </>
   );
 }

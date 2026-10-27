@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useLayoutEffect, useCallback, useMemo, startTransition } from "react";
+import React, { lazy, Suspense, useState, useRef, useEffect, useLayoutEffect, useCallback, useMemo, startTransition } from "react";
 import {
   verifyPassword,
   hashPassword,
@@ -23,12 +23,7 @@ import { hydrateModuleLocalsFromCloud, pushModuleLocalsToCloud } from "./lib/mod
 import { mergeAuthUserLists } from "./modules/auth/authCore.js";
 import { loadLibraryFromLocal } from "./modules/library/libraryCore.js";
 import { loadDiscussionMessages } from "./modules/aboutSupport/aboutSupportCore.js";
-import * as XLSX from "./xlsxClient.js";
 import { Plus, Edit2, Trash2, Upload, Download, Settings, AlertTriangle, Eye, EyeOff } from "lucide-react";
-import { AboutUsPage } from "./AboutUsPage";
-import { BookBankPage } from "./BookBankPage";
-import { LibraryModulePage } from "./modules/library/LibraryModulePage";
-import { DailyRegisterPage } from "./modules/dailyRegister/DailyRegisterPage";
 import * as feeCore from "./modules/fee/feeCore";
 import { feeService, systemSettingsService, dashboardService } from "./services";
 import PWAInstallBanner from "./PWAInstallBanner";
@@ -58,18 +53,63 @@ import {
   staffFormatCNIC, staffFormatPhone, staffFormatDateInput, excelDateToDDMMYYYY,
   parseMarksImportCell, parseWorkbook, getExportHeaderMeta, DASHBOARD_EXAM_LS,
 } from "./shared/helpers";
-import { DashboardPage } from "./modules/dashboard/DashboardPage";
-import { StudentsModulePage } from "./modules/students/StudentsModulePage";
-import { StaffModulePage } from "./modules/staff/StaffModulePage";
-import { AcademicModulePage } from "./modules/academic/AcademicModulePage";
-import { TimetablePage } from "./modules/timetable/TimetablePage";
-import { ExaminationPage } from "./modules/examination/ExaminationPage";
-import { PaperGeneratorPage } from "./modules/paperGenerator/PaperGeneratorPage";
-import { CardGeneratorPage } from "./modules/cardGenerator/CardGeneratorPage";
-import { loadAttendanceFromLocal, ATTENDANCE_DATA_KEY } from "./modules/attendance/AttendancePage";
-import { AttendanceLeaveModulePage } from "./modules/attendance/AttendanceLeaveModulePage";
-import { FeeFinanceModulePage } from "./modules/fee/FeeFinanceModulePage";
-import { SettingsPage } from "./modules/settings/SettingsPage";
+import { loadAttendanceFromLocal, ATTENDANCE_DATA_KEY } from "./modules/attendance/attendanceCore.js";
+
+const DashboardPage = lazy(() =>
+  import("./modules/dashboard/DashboardPage").then((m) => ({ default: m.DashboardPage })),
+);
+const StudentsModulePage = lazy(() =>
+  import("./modules/students/StudentsModulePage").then((m) => ({ default: m.StudentsModulePage })),
+);
+const StaffModulePage = lazy(() =>
+  import("./modules/staff/StaffModulePage").then((m) => ({ default: m.StaffModulePage })),
+);
+const AcademicModulePage = lazy(() =>
+  import("./modules/academic/AcademicModulePage").then((m) => ({ default: m.AcademicModulePage })),
+);
+const TimetablePage = lazy(() =>
+  import("./modules/timetable/TimetablePage").then((m) => ({ default: m.TimetablePage })),
+);
+const ExaminationPage = lazy(() =>
+  import("./modules/examination/ExaminationPage").then((m) => ({ default: m.ExaminationPage })),
+);
+const PaperGeneratorPage = lazy(() =>
+  import("./modules/paperGenerator/PaperGeneratorPage").then((m) => ({ default: m.PaperGeneratorPage })),
+);
+const CardGeneratorPage = lazy(() =>
+  import("./modules/cardGenerator/CardGeneratorPage").then((m) => ({ default: m.CardGeneratorPage })),
+);
+const AttendanceLeaveModulePage = lazy(() =>
+  import("./modules/attendance/AttendanceLeaveModulePage").then((m) => ({
+    default: m.AttendanceLeaveModulePage,
+  })),
+);
+const FeeFinanceModulePage = lazy(() =>
+  import("./modules/fee/FeeFinanceModulePage").then((m) => ({ default: m.FeeFinanceModulePage })),
+);
+const SettingsPage = lazy(() =>
+  import("./modules/settings/SettingsPage").then((m) => ({ default: m.SettingsPage })),
+);
+const DailyRegisterPage = lazy(() =>
+  import("./modules/dailyRegister/DailyRegisterPage").then((m) => ({ default: m.DailyRegisterPage })),
+);
+const LibraryModulePage = lazy(() =>
+  import("./modules/library/LibraryModulePage").then((m) => ({ default: m.LibraryModulePage })),
+);
+const BookBankPage = lazy(() =>
+  import("./BookBankPage").then((m) => ({ default: m.BookBankPage })),
+);
+const AboutUsPage = lazy(() =>
+  import("./AboutUsPage").then((m) => ({ default: m.AboutUsPage })),
+);
+
+function PageFallback() {
+  return (
+    <div className="flex min-h-[40vh] items-center justify-center text-sm text-slate-500">
+      Loading…
+    </div>
+  );
+}
 
 /** Main shell navigation (left sidebar). */
 const APP_MAIN_NAV = [
@@ -1916,6 +1956,7 @@ function App(){
         onSignOut={signOut}
         onChangePassword={()=>setShowChangePw(true)}
       >
+          <Suspense fallback={<PageFallback />}>
           {page==="dashboard"&&(
             <DashboardPage
               settings={effectiveSettings}
@@ -2016,6 +2057,7 @@ function App(){
           )}
           {page==="about"&&<AboutUsPage />}
           {page==="settings"&&!isTeacher&&<SettingsPage settings={effectiveSettings} setSettings={setSettingsForActive} setSchools={setSchools} students={students} setStudents={setStudentsForActive} schools={schools} activeSchoolId={activeSchoolId} timetable={timetable} exam_tm={exam_tm} exam_om={exam_om} setExamMarks={setExamMarksForActive} currentSession={curSession} sessions={activeSchool.sessions||[curSession]} setCurrentSession={setCurrentSessionForActive} addSession={addSessionForActive} staffProfiles={staffProfiles} setBarSubtitle={setBarSubtitle} session={session}/>}
+          </Suspense>
       </AppDashboardShell>
       <PWAInstallBanner />
     </div>

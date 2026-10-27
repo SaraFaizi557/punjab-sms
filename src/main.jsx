@@ -78,19 +78,20 @@ function registerServiceWorker() {
 
 registerServiceWorker();
 
-async function boot() {
-  // Ensure public/psms-config.js (or JSON) is applied before React mounts
-  // so Admin shows Cloud ON on every browser/device using this app URL.
-  try {
-    await initSupabaseCloud();
-  } catch (err) {
-    console.warn("Cloud init failed", err);
-  }
+function boot() {
+  // Paint immediately — do not await cloud/network before first React frame.
+  // HTML #psms-boot-splash inside #root is replaced when React commits.
   createRoot(document.getElementById("root")).render(
     <StrictMode>
       <Root />
     </StrictMode>,
   );
+
+  // Cloud config is usually already inlined (psms-config.js / __PSMS_CLOUD__).
+  // Finish init in the background; login still awaits ensureCloudReady().
+  void initSupabaseCloud().catch((err) => {
+    console.warn("Cloud init failed", err);
+  });
 }
 
 boot();

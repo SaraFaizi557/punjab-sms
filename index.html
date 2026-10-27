@@ -22,7 +22,19 @@
     <title>Punjab-SMS</title>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Instant paint before JS bundles load (removed when React mounts). -->
+      <div id="psms-boot-splash" role="status" aria-live="polite" aria-label="Loading Punjab-SMS" style="position:fixed;inset:0;z-index:2147483646;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#fff;font-family:Montserrat,system-ui,sans-serif">
+        <img src="/app-brand-logo.png" alt="" width="200" height="114" style="width:min(78vw,280px);height:auto;object-fit:contain" />
+        <div style="margin-top:20px;width:min(200px,72vw)">
+          <div style="height:5px;border-radius:999px;background:#e5e7eb;overflow:hidden">
+            <div style="height:100%;width:0;border-radius:999px;background:#0B3A6E;animation:psms-boot-bar 8s linear forwards"></div>
+          </div>
+          <div style="margin-top:10px;text-align:center;font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#64748b">Loading…</div>
+        </div>
+      </div>
+      <style>@keyframes psms-boot-bar{to{width:100%}}@media (prefers-reduced-motion:reduce){#psms-boot-splash [style*="psms-boot-bar"]{animation:none;width:100%!important}}</style>
+    </div>
     <!-- Shared cloud settings for every browser/device (written from .env.local). -->
     <script src="/psms-config.js"></script>
     <script type="module" src="/src/main.jsx"></script>

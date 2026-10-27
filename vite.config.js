@@ -383,7 +383,7 @@ export default defineConfig(({ mode }) => {
     optimizeDeps: {
       // jspdf / jspdf-autotable ship ESM; forcing needsInterop breaks `import { jsPDF }` / constructor binding.
       needsInterop: ["jszip", "html2canvas"],
-      include: ["@imgly/background-removal", "onnxruntime-web"],
+      // Do not prebundle @imgly / onnxruntime — they are dynamic-only and slow cold start.
     },
     worker: {
       format: "es",
@@ -396,8 +396,21 @@ export default defineConfig(({ mode }) => {
     },
     build: {
       chunkSizeWarningLimit: 2500,
-      minify: false,
-      cssMinify: false,
+      minify: "esbuild",
+      cssMinify: true,
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (!id.includes("node_modules")) return;
+            if (id.includes("xlsx")) return "vendor-xlsx";
+            if (id.includes("jspdf")) return "vendor-jspdf";
+            if (id.includes("@supabase")) return "vendor-supabase";
+            if (id.includes("react-dom") || id.includes("/react/") || id.endsWith("\\react\\index.js")) {
+              return "vendor-react";
+            }
+          },
+        },
+      },
     },
   };
 });
