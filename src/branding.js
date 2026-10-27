@@ -1,10 +1,11 @@
 /**
  * Single source for the Punjab-SMS brand mark: `public/app-brand-logo.png`
- * (copied to `dist/` on build). Companion icons:
- * - `favicon.png` (browser tab)
- * - `apple-touch-icon.png` (iOS home screen)
- * - `pwa-icon-192.png` / `pwa-icon-512.png` (PWA install on mobile/desktop)
- * Replace those files together when updating the system logo.
+ * (transparent Digital Education Emblem; copied to `dist/` on build).
+ * Companion icons (regenerate via `scripts/generate-app-icons.py`):
+ * - `favicon.png` / `favicon.svg` (browser tab)
+ * - `apple-touch-icon.png` (iOS home screen, navy plate)
+ * - `pwa-icon-192.png` / `pwa-icon-512.png` (PWA any — transparent)
+ * - `pwa-icon-512-maskable.png` (Android adaptive / maskable — navy plate)
  */
 const base = import.meta.env.BASE_URL || "./";
 const withSlash = base.endsWith("/") ? base : `${base}/`;

@@ -1,4 +1,4 @@
-const CACHE_VERSION = "psms-cache-v2";
+const CACHE_VERSION = "psms-cache-v3";
 
 /** Directory URL where this script lives (e.g. `https://host/` or `https://host/psms/`). */
 function appRootUrl() {
@@ -14,6 +14,7 @@ function appShellUrls() {
     favicon: new URL("favicon.png", root).href,
     icon192: new URL("pwa-icon-192.png", root).href,
     icon512: new URL("pwa-icon-512.png", root).href,
+    iconMaskable: new URL("pwa-icon-512-maskable.png", root).href,
     apple: new URL("apple-touch-icon.png", root).href,
   };
 }
@@ -33,6 +34,7 @@ self.addEventListener("install", (event) => {
     urls.favicon,
     urls.icon192,
     urls.icon512,
+    urls.iconMaskable,
     urls.apple,
   ];
   event.waitUntil(

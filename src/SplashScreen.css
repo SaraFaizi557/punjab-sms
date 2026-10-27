@@ -41,8 +41,8 @@
 .app-splash__logo-wrap {
   position: relative;
   z-index: 1;
-  width: min(78vw, 280px);
-  height: min(48vw, 160px);
+  width: min(52vw, 192px);
+  height: min(52vw, 192px);
   display: flex;
   align-items: center;
   justify-content: center;
