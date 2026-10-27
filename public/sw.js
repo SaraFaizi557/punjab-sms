@@ -1,4 +1,4 @@
-const CACHE_VERSION = "psms-cache-v3";
+const CACHE_VERSION = "psms-cache-v4";
 
 /** Directory URL where this script lives (e.g. `https://host/` or `https://host/psms/`). */
 function appRootUrl() {

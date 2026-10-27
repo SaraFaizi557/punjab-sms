@@ -4,7 +4,7 @@
  * Companion icons (regenerate via `scripts/generate-app-icons.py`):
  * - `favicon.png` / `favicon.svg` (browser tab)
  * - `apple-touch-icon.png` (iOS home screen, navy plate)
- * - `pwa-icon-192.png` / `pwa-icon-512.png` (PWA any — transparent)
+ * - `pwa-icon-192.png` / `pwa-icon-512.png` (PWA install — navy plate)
  * - `pwa-icon-512-maskable.png` (Android adaptive / maskable — navy plate)
  */
 const base = import.meta.env.BASE_URL || "./";

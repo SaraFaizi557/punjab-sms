@@ -153,47 +153,32 @@ def main() -> None:
     square = to_square(cleaned)
     OUT_DIR.mkdir(parents=True, exist_ok=True)
 
-    exports = {
+    # In-app / website brand mark — transparent
+    transparent_exports = {
         "favicon.png": (48, 0.06),
-        "apple-touch-icon.png": (180, 0.08),
-        "pwa-icon-192.png": (192, 0.08),
-        "pwa-icon-512.png": (512, 0.08),
-        "pwa-ico.png": (512, 0.08),
         "app-brand.png": (1024, 0.06),
         "app-brand-logo.png": (1024, 0.05),
     }
-    for name, (sz, pad) in exports.items():
-        path = OUT_DIR / name
-        fit(square, sz, pad).save(path, "PNG", optimize=True)
-        print(f"wrote {name} ({sz}x{sz})")
+    for name, (sz, pad) in transparent_exports.items():
+        fit(square, sz, pad).save(OUT_DIR / name, "PNG", optimize=True)
+        print(f"wrote {name} ({sz}x{sz}, transparent)")
 
-    # iOS home screen often composites on light/dark; keep transparent PNG but
-    # also ship a solid navy plate variant for maskable Android/PWA.
-    fit_maskable(square, 512).save(OUT_DIR / "pwa-icon-512-maskable.png", "PNG", optimize=True)
-    print("wrote pwa-icon-512-maskable.png")
-
-    # Apple touch: opaque navy plate (iOS ignores alpha on home screen)
-    apple = fit_maskable(square, 180, bg=NAVY, pad_ratio=0.12)
-    apple.save(OUT_DIR / "apple-touch-icon.png", "PNG", optimize=True)
-    print("rewrote apple-touch-icon.png (navy plate)")
+    # Installed PWA / Android / desktop icons — navy plate (opaque, launcher-safe)
+    pwa_exports = {
+        "pwa-icon-192.png": (192, 0.12),
+        "pwa-icon-512.png": (512, 0.12),
+        "pwa-ico.png": (512, 0.12),
+        "pwa-icon-512-maskable.png": (512, 0.18),
+        "apple-touch-icon.png": (180, 0.12),
+    }
+    for name, (sz, pad) in pwa_exports.items():
+        fit_maskable(square, sz, bg=NAVY, pad_ratio=pad).save(
+            OUT_DIR / name, "PNG", optimize=True
+        )
+        print(f"wrote {name} ({sz}x{sz}, navy plate)")
 
     write_favicon_svg(square, OUT_DIR / "favicon.svg")
     print("wrote favicon.svg")
-
-    # Transparency check preview (temporary)
-    preview = fit(square, 512, 0.08)
-    chk = Image.new("RGBA", (512, 512), (0, 0, 0, 0))
-    draw = ImageDraw.Draw(chk)
-    for yy in range(0, 512, 16):
-        for xx in range(0, 512, 16):
-            c = (
-                (226, 232, 240, 255)
-                if ((xx // 16) + (yy // 16)) % 2 == 0
-                else (248, 250, 252, 255)
-            )
-            draw.rectangle([xx, yy, xx + 15, yy + 15], fill=c)
-    Image.alpha_composite(chk, preview).save(OUT_DIR / "_icon-preview-check.png", "PNG")
-    print("wrote _icon-preview-check.png")
 
 
 if __name__ == "__main__":
