@@ -68,7 +68,9 @@ export function ClassSubjCard({cls,examSubjects,timetableSubjects,onAddExam,onRe
     <Card className="h-full border-border/70 shadow-sm">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
         <CardTitle className="text-sm font-bold text-primary">{formatClassDisplay(cls)}</CardTitle>
-        <Button type="button" variant="destructive" size="sm" className="h-7 w-7 p-0" onClick={onRemoveClass}>×</Button>
+        <Button type="button" variant="destructive" size="icon-sm" aria-label="Remove class" onClick={onRemoveClass}>
+          <X className="size-3.5" />
+        </Button>
       </CardHeader>
       <CardContent className="space-y-4">
         <div>
@@ -77,7 +79,9 @@ export function ClassSubjCard({cls,examSubjects,timetableSubjects,onAddExam,onRe
             {examSubjects.map(s=>(
               <Badge key={`exam_${s}`} variant="secondary" className="gap-1 bg-blue-100 text-blue-800 hover:bg-blue-100">
                 {s}
-                <Button type="button" variant="ghost" size="icon-xs" className="ml-0.5 size-4 text-xs" onClick={()=>onRemoveExam(s)}>×</Button>
+                <Button type="button" variant="ghost" size="icon-xs" className="ml-0.5 size-4" aria-label={`Remove ${s}`} onClick={()=>onRemoveExam(s)}>
+                  <X className="size-3" />
+                </Button>
               </Badge>
             ))}
           </div>
@@ -99,7 +103,9 @@ export function ClassSubjCard({cls,examSubjects,timetableSubjects,onAddExam,onRe
             {timetableSubjects.map(s=>(
               <Badge key={`tt_${s}`} className="gap-1 bg-primary/10 text-primary hover:bg-primary/10">
                 {s}
-                <Button type="button" variant="ghost" size="icon-xs" className="ml-0.5 size-4 text-xs" onClick={()=>onRemoveTimetable(s)}>×</Button>
+                <Button type="button" variant="ghost" size="icon-xs" className="ml-0.5 size-4" aria-label={`Remove ${s}`} onClick={()=>onRemoveTimetable(s)}>
+                  <X className="size-3" />
+                </Button>
               </Badge>
             ))}
           </div>

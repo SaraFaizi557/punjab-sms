@@ -368,18 +368,25 @@ export function AboutUsPage() {
           <p className="m-0 max-w-xl text-[15px] leading-relaxed text-white/90">
             Professional school operations software — contact us for licensing, custom builds, or day-to-day support.
           </p>
-          <div className="flex flex-wrap gap-2.5">
-            <Button asChild size="lg" className="bg-white text-primary hover:bg-white/95 shadow-md">
-              <a href={WHATSAPP_HREF} target="_blank" rel="noopener noreferrer">
-                <MessageCircle aria-hidden />
-                Message on WhatsApp
-              </a>
+          <div className="flex w-full min-w-0 flex-nowrap items-center gap-2.5 overflow-x-auto">
+            <Button
+              size="lg"
+              nativeButton={false}
+              className="whitespace-nowrap bg-white text-primary shadow-md hover:bg-white/95"
+              render={<a href={WHATSAPP_HREF} target="_blank" rel="noopener noreferrer" />}
+            >
+              <MessageCircle aria-hidden />
+              Message on WhatsApp
             </Button>
-            <Button asChild size="lg" variant="outline" className="border-white/35 bg-white/10 text-white hover:bg-white/20 hover:text-white">
-              <a href={MAILTO_HREF}>
-                <Mail aria-hidden />
-                Email the team
-              </a>
+            <Button
+              size="lg"
+              variant="outline"
+              nativeButton={false}
+              className="whitespace-nowrap border-white/35 bg-white/10 text-white hover:bg-white/20 hover:text-white"
+              render={<a href={MAILTO_HREF} />}
+            >
+              <Mail aria-hidden />
+              Email the team
             </Button>
           </div>
         </div>
@@ -443,16 +450,21 @@ export function AboutUsPage() {
                       <p className="m-0 break-words text-xs font-semibold tabular-nums text-muted-foreground">{channel.value}</p>
                     </CardContent>
                     <CardFooter>
-                      <Button asChild className="w-full" variant={channel.id === "whatsapp" ? "default" : "outline"}>
-                        <a
-                          href={channel.href}
-                          target={channel.external ? "_blank" : undefined}
-                          rel={channel.external ? "noopener noreferrer" : undefined}
-                          aria-label={`${channel.cta}: ${channel.value}`}
-                        >
-                          <Icon aria-hidden />
-                          {channel.cta}
-                        </a>
+                      <Button
+                        className="w-full whitespace-nowrap"
+                        variant={channel.id === "whatsapp" ? "default" : "outline"}
+                        nativeButton={false}
+                        render={
+                          <a
+                            href={channel.href}
+                            target={channel.external ? "_blank" : undefined}
+                            rel={channel.external ? "noopener noreferrer" : undefined}
+                            aria-label={`${channel.cta}: ${channel.value}`}
+                          />
+                        }
+                      >
+                        <Icon aria-hidden />
+                        {channel.cta}
                       </Button>
                     </CardFooter>
                   </Card>

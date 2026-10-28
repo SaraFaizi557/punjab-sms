@@ -59,12 +59,56 @@ const PAPER_TYPES = [
   { id: "aiBook", l: "AI Book Paper", label: "AI Book Paper" },
 ];
 
-export function PaperGeneratorPage({settings,questionBank,setQuestionBank,setBarSubtitle}){
-  const [paperType,setPaperType]=useState("regular");
-  const [selCls,setSelCls]=useState(settings.classes[0]?.id||"");
-  const [subj,setSubj]=useState("");
-  const [exam,setExam]=useState("Annual");
-  const [time,setTime]=useState(180);
+function defaultPaperSections() {
+  return [
+    {id:1,title:"Section A – Objective",type:"MCQs",marks:20,instructions:"",questions:[{id:genId(),text:"",options:["","","",""],correct:0}]},
+    {id:2,title:"Section B – Short Questions",type:"Short",marks:40,instructions:"",questions:[{id:genId(),text:""}]},
+    {id:3,title:"Section C – Long Questions",type:"Long",marks:40,instructions:"",questions:[{id:genId(),text:""}]},
+  ];
+}
+
+function paperDraftKey(schoolId) {
+  return `psms-paper-draft:${schoolId || "default"}`;
+}
+
+function readPaperDraft(schoolId, settings) {
+  try {
+    const raw = window.localStorage.getItem(paperDraftKey(schoolId));
+    if (!raw) return null;
+    const data = JSON.parse(raw);
+    if (!data || !Array.isArray(data.sections) || data.sections.length === 0) return null;
+    if (!data.sections.every((section) => section && Array.isArray(section.questions))) return null;
+    const classes = Array.isArray(settings?.classes) ? settings.classes : [];
+    const classIds = new Set(classes.map((item) => item.id));
+    return {
+      paperType: PAPER_TYPES.some((item) => item.id === data.paperType) ? data.paperType : "regular",
+      selCls: classIds.has(data.selCls) ? data.selCls : (classes[0]?.id || ""),
+      subj: typeof data.subj === "string" ? data.subj : "",
+      exam: typeof data.exam === "string" && data.exam ? data.exam : "Annual",
+      time: Number.isFinite(Number(data.time)) ? Number(data.time) : 180,
+      sections: data.sections,
+      autoPaperSubPage: ["dashboard", "upload", "planning"].includes(data.autoPaperSubPage) ? data.autoPaperSubPage : "dashboard",
+    };
+  } catch {
+    return null;
+  }
+}
+
+function writePaperDraft(schoolId, draft) {
+  try {
+    window.localStorage.setItem(paperDraftKey(schoolId), JSON.stringify(draft));
+  } catch {
+    /* Ignore quota and private-mode storage failures. */
+  }
+}
+
+export function PaperGeneratorPage({settings,questionBank,setQuestionBank,setBarSubtitle,schoolId}){
+  const [draft] = useState(() => readPaperDraft(schoolId, settings));
+  const [paperType,setPaperType]=useState(draft?.paperType || "regular");
+  const [selCls,setSelCls]=useState(draft?.selCls || settings.classes[0]?.id||"");
+  const [subj,setSubj]=useState(draft?.subj || "");
+  const [exam,setExam]=useState(draft?.exam || "Annual");
+  const [time,setTime]=useState(draft?.time ?? 180);
   const [preview,setPreview]=useState(false);
   const [printPaperMode,setPrintPaperMode]=useState(false);
   useEffect(()=>{
@@ -77,16 +121,12 @@ export function PaperGeneratorPage({settings,questionBank,setQuestionBank,setBar
     window.addEventListener("afterprint",onAfter);
     return ()=>window.removeEventListener("afterprint",onAfter);
   },[]);
-  const [sections,setSections]=useState([
-    {id:1,title:"Section A – Objective",type:"MCQs",marks:20,instructions:"",questions:[{id:genId(),text:"",options:["","","",""],correct:0}]},
-    {id:2,title:"Section B – Short Questions",type:"Short",marks:40,instructions:"",questions:[{id:genId(),text:""}]},
-    {id:3,title:"Section C – Long Questions",type:"Long",marks:40,instructions:"",questions:[{id:genId(),text:""}]},
-  ]);
+  const [sections,setSections]=useState(() => draft?.sections || defaultPaperSections());
   const subs=getClassSubjects(settings,selCls,"exam");
   useEffect(()=>{
     const nextSubs=getClassSubjects(settings,selCls,"exam");
     if(!nextSubs.length) return;
-    queueMicrotask(()=>setSubj(nextSubs[0]));
+    setSubj((current) => (current && nextSubs.includes(current) ? current : nextSubs[0]));
   },[selCls, settings]);
   const currentClsObj = useMemo(()=>settings.classes.find(c=>c.id===selCls), [settings.classes, selCls]);
   const isCommonSubj = useMemo(()=>{
@@ -129,7 +169,15 @@ export function PaperGeneratorPage({settings,questionBank,setQuestionBank,setBar
     setBankForCurrent(bankForCurrent.map(q=>q.id===qid?{...q,[field]:value}:q));
   };
   const _removeBankQuestion=(qid)=>setBankForCurrent(bankForCurrent.filter(q=>q.id!==qid));
-  const [autoPaperSubPage,setAutoPaperSubPage]=useState("dashboard"); // "dashboard" | "planning" | "upload"
+  const [autoPaperSubPage,setAutoPaperSubPage]=useState(draft?.autoPaperSubPage || "dashboard"); // "dashboard" | "planning" | "upload"
+  useEffect(() => {
+    const payload = { paperType, selCls, subj, exam, time, sections, autoPaperSubPage };
+    const timer = window.setTimeout(() => writePaperDraft(schoolId, payload), 250);
+    return () => {
+      window.clearTimeout(timer);
+      writePaperDraft(schoolId, payload);
+    };
+  }, [schoolId, paperType, selCls, subj, exam, time, sections, autoPaperSubPage]);
   useEffect(()=>{
     if(!setBarSubtitle) return;
     const base=PAPER_TYPES.find(x=>x.id===paperType)?.label||"Paper";
@@ -583,8 +631,8 @@ export function PaperGeneratorPage({settings,questionBank,setQuestionBank,setBar
     {sections.map(sec=><div key={sec.id} style={{border:"1.5px solid #e5e7eb",borderRadius:8,marginBottom:14,overflow:"hidden"}}>
       <div style={{background:C.navy,color:"#fff",padding:"8px 12px",display:"flex",gap:10,alignItems:"center",flexWrap:"wrap"}}>
         <Input value={sec.title} onChange={e=>setSections(s=>s.map(x=>x.id===sec.id?{...x,title:e.target.value}:x))} className="h-auto flex-1 border-none bg-transparent px-0 py-0 text-[13px] font-bold text-white shadow-none focus-visible:ring-0"/>
-        <Input type="number" value={sec.marks} onChange={e=>setSections(s=>s.map(x=>x.id===sec.id?{...x,marks:+e.target.value}:x))} className="h-7 w-14 border-none bg-white/95 text-center text-xs shadow-none"/>
-        <span style={{fontSize:11}}>marks</span>
+        <Input type="number" value={sec.marks} onChange={e=>setSections(s=>s.map(x=>x.id===sec.id?{...x,marks:+e.target.value}:x))} className="h-7 w-14 border-none bg-white text-center text-xs font-semibold text-[#0B3A6E] shadow-none"/>
+        <span className="text-xs font-semibold text-white">marks</span>
       </div>
       <div style={{padding:10}}>
         <Input value={sec.instructions} onChange={e=>setSections(s=>s.map(x=>x.id===sec.id?{...x,instructions:e.target.value}:x))} placeholder="Instructions…" className="mb-2 text-xs"/>
@@ -592,7 +640,9 @@ export function PaperGeneratorPage({settings,questionBank,setQuestionBank,setBar
           <div style={{display:"flex",gap:6,alignItems:"flex-start"}}>
             <span style={{fontWeight:700,color:C.navy,minWidth:22,paddingTop:6,fontSize:12}}>Q{qi+1}.</span>
             <Textarea value={q.text} onChange={e=>upQ(sec.id,q.id,"text",e.target.value)} placeholder="Question…" className="min-h-11 flex-1 text-xs"/>
-            <Button size="sm" variant="destructive" onClick={()=>rmQ(sec.id,q.id)}>×</Button>
+            <Button type="button" size="icon-sm" variant="destructive" aria-label="Remove question" onClick={()=>rmQ(sec.id,q.id)}>
+              <X className="size-4" />
+            </Button>
           </div>
           {sec.type==="MCQs"&&(
             <RadioGroup

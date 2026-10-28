@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { BookOpen } from "lucide-react";
 
 function normalize(text) {
@@ -106,15 +105,6 @@ export function BookBankPage({ setBarSubtitle }) {
     setVisibleCount(PAGE_SIZE);
   }, [activeClass, query]);
 
-  function openClassPlaylist() {
-    if (!currentClass?.books?.length) return;
-    currentClass.books.forEach((book, index) => {
-      setTimeout(() => {
-        window.open(book.url, "_blank", "noopener,noreferrer");
-      }, index * 180);
-    });
-  }
-
   return (
     <ModulePageShell
       title="Book Bank"
@@ -135,40 +125,36 @@ export function BookBankPage({ setBarSubtitle }) {
       bareContent
     >
       <div className="space-y-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto">
           {classes.length > 0 ? (
             <Tabs
               value={activeClass}
               onValueChange={(next) => startTransition(() => setActiveClass(next))}
-              className="min-w-0 flex-1"
+              className="w-max shrink-0"
             >
-              <ScrollArea className="w-full whitespace-nowrap">
-                <TabsList className="inline-flex h-auto min-h-9 w-max max-w-none flex-wrap justify-start gap-1 bg-muted p-1">
-                  {classes.map((item) => (
-                    <TabsTrigger key={item.className} value={item.className} className="shrink-0 text-xs sm:text-sm">
-                      {item.className}
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
-                <ScrollBar orientation="horizontal" />
-              </ScrollArea>
+              <TabsList className="inline-flex h-9 w-max max-w-none flex-nowrap justify-start gap-1 bg-muted p-1">
+                {classes.map((item) => (
+                  <TabsTrigger key={item.className} value={item.className} className="shrink-0 text-xs sm:text-sm">
+                    {item.className}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
             </Tabs>
           ) : null}
-          <div className="flex shrink-0 flex-wrap items-center gap-2">
-            <Badge variant="secondary">
+          <div className="flex shrink-0 flex-nowrap items-center gap-2">
+            <Badge variant="secondary" className="whitespace-nowrap">
               {renderedBooks.length} / {visibleBooks.length}
             </Badge>
-            <Button asChild size="sm" variant="outline">
-              <a href={BOOK_BANK_URL} target="_blank" rel="noreferrer">
-                <BookOpen className="mr-1.5 size-3.5" />
-                PECTAA catalog
-              </a>
+            <Button
+              size="sm"
+              variant="outline"
+              nativeButton={false}
+              className="whitespace-nowrap"
+              render={<a href={BOOK_BANK_URL} target="_blank" rel="noreferrer" />}
+            >
+              <BookOpen className="size-3.5" />
+              PECTAA catalog
             </Button>
-            {currentClass?.books?.length > 0 ? (
-              <Button type="button" size="sm" variant="outline" onClick={openClassPlaylist}>
-                Open playlist
-              </Button>
-            ) : null}
           </div>
         </div>
 
@@ -191,15 +177,22 @@ export function BookBankPage({ setBarSubtitle }) {
                   <p className="m-0 text-xs text-muted-foreground">{currentClass?.className}</p>
                 </CardContent>
                 <CardFooter className="flex gap-2 p-3 pt-0">
-                  <Button asChild size="sm" className="flex-1">
-                    <a href={book.url} target="_blank" rel="noreferrer">
-                      Open
-                    </a>
+                  <Button
+                    size="sm"
+                    className="flex-1"
+                    nativeButton={false}
+                    render={<a href={book.url} target="_blank" rel="noreferrer" />}
+                  >
+                    Open
                   </Button>
-                  <Button asChild size="sm" variant="outline" className="flex-1">
-                    <a href={book.downloadUrl} target="_blank" rel="noreferrer">
-                      Download
-                    </a>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="flex-1"
+                    nativeButton={false}
+                    render={<a href={book.downloadUrl} target="_blank" rel="noreferrer" />}
+                  >
+                    Download
                   </Button>
                 </CardFooter>
               </Card>

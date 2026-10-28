@@ -566,8 +566,14 @@ export function StaffDocumentsPanel({ staffProfiles, setSchools, activeSchoolId 
                     </div>
                     <div className="flex gap-1.5 items-center">
                       {d.dataUrl ? (
-                        <Button asChild size="xs" variant="link" className="h-auto px-0 text-xs">
-                          <a href={d.dataUrl} target="_blank" rel="noreferrer">Open</a>
+                        <Button
+                          size="xs"
+                          variant="link"
+                          className="h-auto px-0 text-xs"
+                          nativeButton={false}
+                          render={<a href={d.dataUrl} target="_blank" rel="noreferrer" />}
+                        >
+                          Open
                         </Button>
                       ) : null}
                       <Button size="xs" variant="destructive" onClick={() => updateProfile(setSchools, activeSchoolId, profile.id, (p) => removeStaffDocument(p, d.id))}>Remove</Button>
