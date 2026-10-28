@@ -331,8 +331,14 @@ export function DocumentsPanel({ settings, students, setStudents }) {
                     </div>
                     <div className="flex gap-1.5 items-center">
                       {d.dataUrl ? (
-                        <Button asChild size="xs" variant="link" className="h-auto px-0 text-xs">
-                          <a href={d.dataUrl} target="_blank" rel="noreferrer">Open</a>
+                        <Button
+                          size="xs"
+                          variant="link"
+                          className="h-auto px-0 text-xs"
+                          nativeButton={false}
+                          render={<a href={d.dataUrl} target="_blank" rel="noreferrer" />}
+                        >
+                          Open
                         </Button>
                       ) : null}
                       <Button size="xs" variant="destructive" onClick={() => setStudents((prev) => prev.map((st) => (st.id === student.id ? removeStudentDocument(st, d.id) : st)))}>

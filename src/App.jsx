@@ -2213,7 +2213,7 @@ function App(){
               setBarSubtitle={setBarSubtitle}
             />
           )}
-          {page==="paper"&&<PaperGeneratorPage settings={effectiveSettings} questionBank={activeSchool.questionBank||{}} setQuestionBank={updater=>setSchools(prev=>prev.map(s=>s.id===activeSchoolId?{...s,questionBank:typeof updater==="function"?updater(s.questionBank||{}):updater}:s))} setBarSubtitle={setBarSubtitle}/>}
+          {page==="paper"&&<PaperGeneratorPage key={activeSchoolId||"paper"} schoolId={activeSchoolId} settings={effectiveSettings} questionBank={activeSchool.questionBank||{}} setQuestionBank={updater=>setSchools(prev=>prev.map(s=>s.id===activeSchoolId?{...s,questionBank:typeof updater==="function"?updater(s.questionBank||{}):updater}:s))} setBarSubtitle={setBarSubtitle}/>}
           {page==="card"&&<CardGeneratorPage settings={effectiveSettings} students={students} currentSession={curSession} staffProfiles={staffProfiles} setBarSubtitle={setBarSubtitle}/>}
           {page==="book-bank"&&<BookBankPage setBarSubtitle={setBarSubtitle}/>}
           {page==="library"&&(
